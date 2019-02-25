@@ -1,4 +1,9 @@
 import "@babel/polyfill";
+import "material-design-lite/src/mdlComponentHandler";
+import "material-design-lite/src/textfield/textfield";
+import "material-design-lite/src/button/button";
+import "material-design-lite/src/ripple/ripple";
+
 import xhr from "./xhr";
 import * as dom from  "./dom";
 
@@ -16,6 +21,15 @@ function ready(fn) {
         });
 }
 
+const ValidationResult = {
+    success: 0,
+    badCredentials: 1,
+    otpChallenge: 2,
+    badOtp: 3,
+    forbidden: 4,
+    error: 5
+}
+
 function setError(s) {
     let err = dom.q("p.err");
     err.textContent = s;
@@ -28,9 +42,9 @@ async function onSignIn() {
     let pwd = dom.value("pwd");
     let otp = requireOtp && dom.value("otp");
 
-    dom.classIf(!user, "user", "invalid");
-    dom.classIf(!pwd, "pwd", "invalid");
-    dom.classIf(requireOtp && !otp, "otp", "invalid");
+    dom.classIf(!user, dom.id("user").parentNode, "is-invalid");
+    dom.classIf(!pwd, dom.id("pwd").parentNode, "is-invalid");
+    dom.classIf(requireOtp && !otp, dom.id("otp").parentNode, "is-invalid");
 
     if (!user || !pwd || requireOtp && !otp)
         return;
@@ -41,7 +55,13 @@ async function onSignIn() {
             location.reload();
         else if (result.status === 401) {
             if (result.headers.has("x-otp")) {
-                setError("Please, enter your security code.");
+                if (result.content === ValidationResult.badOtp)
+                    setError("Invalid security code.");
+                else {
+                    dom.id("otp").removeAttribute("disabled");
+                    dom.removeClass(dom.id("otp").parentNode, "hidden");
+                    setError("Please, enter your security code.");
+                }
             } else
                 setError("Invalid credentials.");
         } else if (result.status === 403) {

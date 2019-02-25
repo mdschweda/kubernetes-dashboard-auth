@@ -1,16 +1,19 @@
+@import "typography/_typography.scss";
+@import "textfield/_textfield.scss";
+@import "button/_button.scss";
+@import "ripple/_ripple.scss";
+
 body {
     padding: 1em;
 }
 
-input {
+.mdl-textfield {
     display: block;
-    margin-bottom: 1em;
+    transition: opacity 500ms, margin-top 250ms ease-out;
 
-    &.invalid {
-        border: 1px solid red;
-    }
-
-    &:disabled {
-        display: none;
+    &.hidden {
+        opacity: 0;
+        pointer-events: none;
+        margin-top: calc(-16px - 40px - 8px);
     }
 }

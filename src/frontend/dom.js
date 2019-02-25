@@ -37,6 +37,17 @@ export function removeClass(el, cl) {
 
 /**
  * 
+ * @param {HTMLElement | string} el 
+ * @param {string} cl 
+ */
+export function toggleClass(el, cl) {
+    el = element(el);
+    if (el)
+        (hasClass(el, cl) ? removeClass : addClass)(el, cl);
+}
+
+/**
+ * 
  * @param {any} check 
  * @param {HTMLElement | string} el 
  * @param {string} cl 

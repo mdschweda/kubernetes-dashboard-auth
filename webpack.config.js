@@ -27,7 +27,15 @@ module.exports = (env, args) => ({
                             options: { }
                         }
                     },
-                    "sass-loader"
+                    {
+                        loader: "sass-loader",
+                        options: {
+                            includePaths: [
+                                path.resolve(__dirname, "node_modules/material-design-lite/src")
+                            ]
+                        }
+                    }
+                    
                 ]
             },
             {
@@ -44,7 +52,13 @@ module.exports = (env, args) => ({
                     }
                 }]
             },
-        ]
+        ],
+    },
+
+    resolve: {
+        alias: {
+            mdl: path.resolve(__dirname, "node_modules/material-design-lite/src")
+        }
     },
 
     plugins: [
