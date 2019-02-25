@@ -1,0 +1,35 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: kubernetes-dashboard-auth
+  namespace: kube-system
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        k8s-app: kubernetes-dashboard-auth
+    spec:
+      containers:
+      - name: kubernetes-dashboard-auth
+        image: mdschweda/kubernetes-dashboard-auth
+        # https://github.com/kubernetes/dashboard/wiki/Installation#recommended-setup
+        env:
+          - name: PROXY_CERT
+            valueFrom:
+              secretKeyRef:
+                name: kubernetes-dashboard-certs
+                key: dashboard.crt
+          - name: PROXY_KEY
+            valueFrom:
+              secretKeyRef:
+                name: kubernetes-dashboard-certs
+                key: dashboard.key
+          # ...
+          - name: PROXY_UPSTREAM
+            valueFrom:
+              configMapKeyRef:
+                name: kubernetes-dashboard-auth-config
+                key: upstream
+                optional: true
+      serviceAccountName: kubernetes-dashboard

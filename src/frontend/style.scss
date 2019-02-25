@@ -1,0 +1,16 @@
+body {
+    padding: 1em;
+}
+
+input {
+    display: block;
+    margin-bottom: 1em;
+
+    &.invalid {
+        border: 1px solid red;
+    }
+
+    &:disabled {
+        display: none;
+    }
+}

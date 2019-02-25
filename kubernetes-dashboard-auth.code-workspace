@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+    ],
+    "settings": {
+        "typescript.suggestionActions.enabled": false,
+        "yaml.schemas": {
+            "Kubernetes": "deploy/*.yml"
+        }
+    }
+}

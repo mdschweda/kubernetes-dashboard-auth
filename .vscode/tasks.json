@@ -1,0 +1,54 @@
+{
+  "version": "2.0.0",
+  "tasks": [{
+      "label": "📦 Install packages",
+      "type": "npm",
+      "script": "install",
+      "problemMatcher": []
+    },
+    {
+      "label": "🔨 Build (TypeScript)",
+      "type": "typescript",
+      "tsconfig": "tsconfig.json",
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "🔨 Build (Webpack)",
+      "type": "npm",
+      "script": "build-frontend",
+      "problemMatcher": []
+    },
+    {
+      "label": "🔨 Build",
+      "dependsOn": [
+        "🔨 Build (TypeScript)",
+        "🔨 Build (Webpack)"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "🐳 Build Docker image",
+      "type": "shell",
+      "command": "docker",
+      "args": [
+        "build",
+        "-t",
+        "mdschweda/k8s-dashboard-auth"
+      ]
+    },
+    {
+      "label": "👓 Watch (TypeScript)",
+      "type": "typescript",
+      "tsconfig": "tsconfig.json",
+      "option": "watch",
+      "isBackground": true,
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "👓 Watch (Webpack)",
+      "type": "npm",
+      "script": "watch-frontend",
+      "problemMatcher": []
+    }
+  ]
+}
