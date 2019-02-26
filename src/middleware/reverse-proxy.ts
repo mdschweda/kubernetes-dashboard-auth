@@ -8,4 +8,7 @@ const options = {
     secure: false,
 };
 
+/**
+ * A reverse proxy middleware that retrieves resources from an upstream server.
+ */
 export default proxy(options);

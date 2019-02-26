@@ -1,4 +1,5 @@
 const path = require("path");
+const webpack = require("webpack");
 const HtmlWebPackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
@@ -15,6 +16,10 @@ module.exports = (env, args) => ({
             {
                 test: /\.html$/,
                 use: "html-loader",
+            },
+            {
+                test: /\.svg$/,
+                use: "file-loader"
             },
             {
                 test: /\.scss$/,
@@ -70,7 +75,8 @@ module.exports = (env, args) => ({
         }),
         new CopyWebpackPlugin([{
             context: __dirname,
-            from: "./src/static"
+            from: "src/static/*.*",
+            flatten: true
         }])
     ],
 

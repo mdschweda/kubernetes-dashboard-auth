@@ -1,29 +1,60 @@
 import { promises as fs } from "fs";
 import { extname, join } from "path";
 
-export enum ValidationResult {
+/**
+ * Possible result of an user authentication.
+ */
+export enum AuthenticationResult {
+    /** The authentication was successful. */
     Success,
+    /** The provided credentials were invalid. */
     BadCredentials,
+    /** The user has been asked to enter an validation code. */
     OtpChallenge,
+    /** The provided validation code was invalid. */
     BadOtp,
+    /** The authenticated user is not allowed to use the resource. */
     Forbidden,
+    /** An error occured while validating the user credentials. */
     Error
 }
 
+/**
+ * Provides methods for validating user credentials.
+ */
 export interface IAuthenticationProvider {
 
+    /**
+     * The unique name of the provider.
+     */
     readonly name: string;
+
+    /**
+     * Gets all provider configuration errors.
+     */
     readonly configurationErrors: string[];
 
-    authenticate(user: string, password: string, otp?: string): Promise<ValidationResult>;
+    /**
+     * 
+     * @param user The username.
+     * @param password The user's password.
+     * @param otp An optional validation code (one time password).
+     */
+    authenticate(user: string, password: string, otp?: string): Promise<AuthenticationResult>;
     
 }
 
+/**
+ * Creates instaces of {@link IAuthenticationProvider}.
+ */
 export class AuthenticationProviderFactory {
 
     private static providers: Map<string, () => IAuthenticationProvider>;
 
-    static async initialize() {
+    /**
+     * Initializes the available authentication providers.
+     */
+    private static async initialize() {
         let providers = new Map<string, () => IAuthenticationProvider>();
 
         for (var file of await fs.readdir(join(__dirname, "providers"))) {
@@ -43,6 +74,9 @@ export class AuthenticationProviderFactory {
         this.providers = providers;
     }
 
+    /**
+     * Gets the name of the available authentication providers.
+     */
     static async getProviders(): Promise<string[]> {
         if (!this.providers)
             await this.initialize();
@@ -50,6 +84,10 @@ export class AuthenticationProviderFactory {
         return Array.from(this.providers.keys());
     }
 
+    /**
+     * Creates an instance of an authentication provider given its name.
+     * @param name The unique name of the authentication provider.
+     */
     static async getProvider(name: string): Promise<IAuthenticationProvider | undefined> {
         if (!this.providers)
             await this.initialize();

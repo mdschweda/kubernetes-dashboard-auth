@@ -1,4 +1,4 @@
-import { IAuthenticationProvider, ValidationResult } from "../provider";
+import { IAuthenticationProvider, AuthenticationResult } from "../provider";
 
 export default class AzureADValidationProvider implements IAuthenticationProvider  {
 
@@ -10,7 +10,7 @@ export default class AzureADValidationProvider implements IAuthenticationProvide
         return [];
     }
 
-    async authenticate(user: string, password: string, otp?: string | undefined): Promise<ValidationResult> {
+    async authenticate(user: string, password: string, otp?: string | undefined): Promise<AuthenticationResult> {
         throw new Error("NYI.");
     }
 

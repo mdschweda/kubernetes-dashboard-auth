@@ -1,22 +1,21 @@
 import fs from "fs";
 import path from "path";
-import url from "url";
 import { decode } from "./base64";
-import { AuthenticationProviderFactory } from "./authentication/provider";
+import { merge } from "lodash";
+import validate from "./validation";
 
-process.env.NODE_ENV = process.env.NODE_ENV || "production";
+// Development configuration (development.config.json)
+function devel() {
+    if ((process.env.NODE_ENV = process.env.NODE_ENV || "production") !== "development")
+        return { };
 
-// Development mode
-if (process.env.NODE_ENV === "development") {
     let dir = __dirname;
     
     try {
         while (fs.existsSync(dir)) {
-            if (fs.existsSync(path.join(dir, "development.env.json"))) {
-                let json = fs.readFileSync(path.join(dir, "development.env.json")).toString();
-                let develConfig = JSON.parse(json);
-                for (var c in develConfig)
-                    process.env[c] = develConfig[c] || process.env[c]
+            if (fs.existsSync(path.join(dir, "development.config.json"))) {
+                let json = fs.readFileSync(path.join(dir, "development.config.json")).toString();
+                return JSON.parse(json);
             }
 
             let parent = path.resolve(path.join(dir, ".."));
@@ -28,61 +27,109 @@ if (process.env.NODE_ENV === "development") {
     } catch { }
 }
 
-let config = {
-    upstream: process.env.PROXY_UPSTREAM || "https://kubernetes-dashboard.kube-system.svc.cluster.local:8443/",
+/**
+ * The application configuration.
+ */
+export interface Configuration {
+    /** The url of the dashboard. Default is `https://kubernetes-dashboard.kube-system.svc.cluster.local:8443/`. */
+    upstream: string;
+    /** The SSL configuration. */
     tls: {
-        crt: decode(process.env.PROXY_CERT || ""),
-        key: decode(process.env.PROXY_KEY || "")
+        /** The server certificate. */
+        cert: string;
+        /** The private key of the server. */
+        key: string;
     },
     host: {
+        /** The server ports. */
         port: {
-            http: Number.parseInt(process.env.PROXY_PORT || "80"),
-            https: Number.parseInt(process.env.PROXY_PORT_SSL || "443")
+            /** The HTTP port. Default is `80`. */
+            http: number;
+            /** The HTTPS port. Default is `443`. */
+            https: number;
         }
     },
-    authentication: {
-        provider: process.env.AUTH_PROVIDER || "",
-        token: process.env.AUTH_TOKEN || "",
+    /** The authentication and authorization configuration. */
+    auth: {
+        /** The used authentication provider. */
+        provider: string;
+        // TODO acr: "serviceAccount" or acr: { "$default": "serviceAccount1", "user1": "serviceAccount2", "user2": "serviceAccount3" }
+        token: string;
+        /** Configuration used in conunction with provider `ldap`. */
         ldap: {
-            server: process.env.LDAP_SERVER || "",
-            bindUser: process.env.LDAP_BIND_USER || "",
-            bindPassword: process.env.LDAP_BIND_PASSWORD || "",
-            baseDN: process.env.LDAP_BASE_DN || "",
-            userAttribute: process.env.LDAP_USER_ATTRIBUTE || "sAMAccountName",
-            group: process.env.LDAP_USER_GROUP,
+            /** The LDAP server address. */
+            server: string;
+            /** The distinguished name of the account to use when connecting to the LDAP server. */
+            bindUser: string;
+            /** The password to use when connecting to the LDAP server. */
+            bindPassword: string;
+            /** The distinguished name of the entity where to search in. */
+            baseDN: string;
+            /** The name of the LDAP attribute that holds the account name. Default is `sAMAccountName`. */
+            userAttribute: string;
+            /** When set, the user must be member of this group to access the dashboard. */
+            group: string | undefined;
         },
         github: {
-            organization: process.env.GITHUB_ORGANIZATION
+            /** The name of the GitHub organization as displayed in the URL of the organization page: `github.com/orgs/{{organization}}` */
+            organization: string;
+            /** When set, the user must be member of this team to access the dashboard. */
+            team: string | undefined;
+        }
+    }
+}
+
+const defaults = {
+    upstream: "https://kubernetes-dashboard.kube-system.svc.cluster.local:8443/",
+    host: {
+        port: {
+            http: 80,
+            https: 443
+        }
+    },
+    auth: {
+        acr: {
+            "$default": "dashboard"
+        },
+        ldap: {
+            userAttribute: "sAMAccountName"
         }
     }
 };
 
-// #region Validation + Sanitization
+const providedValues = {
+    upstream: process.env.CONFIG_UPSTREAM,
+    tls: {
+        cert: process.env.CONFIG_TLS_CERT && decode(process.env.CONFIG_TLS_CERT),
+        key: process.env.CONFIG_TLS_KEY && decode(process.env.CONFIG_TLS_KEY)
+    },
+    host: {
+        port: {
+            http: process.env.CONFIG_HOST_PORT_HTTP && Number.parseInt(process.env.CONFIG_HOST_PORT_HTTP),
+            https: process.env.CONFIG_HOST_PORT_HTTPS && Number.parseInt(process.env.CONFIG_HOST_PORT_HTTPS)
+        }
+    },
+    auth: {
+        provider: process.env.CONFIG_AUTH_PROVIDER,
+        token: process.env.CONFIG_AUTH_TOKEN,
+        ldap: {
+            server: process.env.CONFIG_AUTH_LDAP_SERVER,
+            bindUser: process.env.CONFIG_AUTH_LDAP_BIND_USER,
+            bindPassword: process.env.CONFIG_AUTH_LDAP_BIND_PASSWORD,
+            baseDN: process.env.CONFIG_AUTH_LDAP_BASE_DN,
+            userAttribute: process.env.CONFIG_AUTH_LDAP_USER_ATTRIBUTE,
+            group: process.env.CONFIG_AUTH_LDAP_USER_GROUP,
+        },
+        github: {
+            organization: process.env.CONFIG_AUTH_GITHUB_ORGANIZATION,
+            team: process.env.CONFIG_AUTH_GITHUB_TEAM
+        }
+    }
+};
 
-(async () => {
-    let errors = [];
-    !(config.tls.crt && config.tls.key) && errors.push("Certificate improperly configured.");
-    !config.authentication.token && errors.push("No bearer token configured.");
-    !config.authentication.provider && errors.push("No authentication provider specified.")
-    
-    try {
-        let upstream = url.parse(config.upstream);
-        if (upstream.protocol !== "https:")
-            upstream.protocol = "https:";
-        config.upstream = url.format(upstream);
-    } catch {
-        errors.push("Invalid dashboard address (option 'upstream').")
-    }
-    
-    if (config.authentication.provider) {
-        let provider = await AuthenticationProviderFactory.getProvider(config.authentication.provider);
-        if (!provider)
-            errors.push(`Unknown authentication provider: ${config.authentication.provider}.`);
-        else
-            for (var error of provider.configurationErrors)
-                errors.push(error);
-    }
-    
+const config = merge(merge(defaults, devel()), providedValues) as Configuration;
+
+validate(config).then(errors => {
     if (errors.length) {
         console.error("⛔ Please, revise your configuration:")
     
@@ -92,11 +139,6 @@ let config = {
         console.error("See https://github.com/mdschweda/kubernetes-dashboard-auth for details.");
         process.exit(1);
     }
-    
-    if (process.env.NODE_ENV !== "production")
-        console.warn(`Environment is ${process.env.NODE_ENV}`);
-})();
-
-// #endregion
+});
 
 export default config;

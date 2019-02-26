@@ -1,6 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import config from "../config";
 
+/**
+ * A middleware that redirects http to https requests.
+ * @param req The request object.
+ * @param res The response object.
+ * @param next The next middleware in the pipeline.
+ */
 export default function (req: Request, res: Response, next: NextFunction) {
     if (req.secure)
         return next();
