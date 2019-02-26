@@ -36,11 +36,11 @@ export interface IAuthenticationProvider {
 
     /**
      * 
-     * @param user The username.
+     * @param username The username.
      * @param password The user's password.
      * @param otp An optional validation code (one time password).
      */
-    authenticate(user: string, password: string, otp?: string): Promise<AuthenticationResult>;
+    authenticate(username: string, password: string, otp?: string): Promise<AuthenticationResult>;
     
 }
 

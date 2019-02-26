@@ -10,7 +10,7 @@ export default class HtpasswdValidationProvider implements IAuthenticationProvid
         return [];
     }
 
-    async authenticate(user: string, password: string, otp?: string | undefined): Promise<AuthenticationResult> {
+    async authenticate(username: string, password: string, otp?: string | undefined): Promise<AuthenticationResult> {
         throw new Error("NYI.");
     }
 

@@ -41,11 +41,11 @@ export default class GitHubValidationProvider implements IAuthenticationProvider
     }
     
     /** @inheritdoc */
-    async authenticate(user: string, password: string, otp?: string | undefined): Promise<AuthenticationResult> {
+    async authenticate(username: string, password: string, otp?: string | undefined): Promise<AuthenticationResult> {
         try {
             let resp = await axios.get(`https://api.github.com/user/${config.auth.github.team ? "teams" : "orgs"}`, {
                 auth: {
-                    username: user,
+                    username,
                     password
                 },
                 headers: otp && {

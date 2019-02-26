@@ -75,6 +75,19 @@ export interface Configuration {
             organization: string;
             /** When set, the user must be member of this team to access the dashboard. */
             team: string | undefined;
+        },
+        azuread: {
+            /** The id of the Azure AD tenant as displayed in the "Properties" blade ("Directory ID") */
+            tenant: string,
+            /** When set, the user must be member of this Azure AD group to access the dashboard. Object ID as displayed in the "Overview" blade of the group.  */
+            group: string | undefined,
+            /** Required information of the registered AZure AD app. */
+            client: {
+                /** The application ID as displayed in the "Overview" blade of the app. */
+                id: string,
+                /** The client secret value as displayed in the "Certificates & secrets" blade of the app. */
+                secret: string
+            }
         }
     }
 }
@@ -123,6 +136,14 @@ const providedValues = {
         github: {
             organization: process.env.CONFIG_AUTH_GITHUB_ORGANIZATION,
             team: process.env.CONFIG_AUTH_GITHUB_TEAM
+        },
+        azuread: {
+            tenant: process.env.CONFIG_AUTH_AZUREAD_TENANT,
+            group: process.env.CONFIG_AUTH_AZUREAD_GROUP,
+            client: {
+              id: process.env.CONFIG_AUTH_AZUREAD_CLIENT_ID,
+              secret: process.env.CONFIG_AUTH_AZUREAD_CLIENT_SECRET
+            }
         }
     }
 };

@@ -85,13 +85,13 @@ export default class LDAPValidationProvider implements IAuthenticationProvider  
     }
 
     /** @inheritdoc */
-    async authenticate(user: string, password: string): Promise<AuthenticationResult> {
+    async authenticate(username: string, password: string): Promise<AuthenticationResult> {
         let client = new LdapClient();
 
         try {
             await client.bind(config.auth.ldap.bindUser, config.auth.ldap.bindPassword);
         } catch (e) {
-            console.error(`Binding to LDAP user failed: ${e}`);
+            console.error(`[LDAP] Bind failed: ${e}`);
             return AuthenticationResult.Error;
         }
 
@@ -100,10 +100,10 @@ export default class LDAPValidationProvider implements IAuthenticationProvider  
         try {
             match = await client.search(config.auth.ldap.baseDN, {
                 scope: "sub",
-                filter: `(${config.auth.ldap.userAttribute}=${user})`
+                filter: `(${config.auth.ldap.userAttribute}=${username})`
             });
         } catch (e) {
-            console.error(`Searching the LDAP directory failed: ${e}`);
+            console.error(`[LDAP] Searching the directory failed: ${e}`);
             return AuthenticationResult.Error;
         }
 

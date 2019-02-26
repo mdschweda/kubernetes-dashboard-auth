@@ -20,20 +20,20 @@ export default class TestValidationProvider implements IAuthenticationProvider  
         return [];
     }
 
-    async authenticate(user: string, password: string, otp?: string | undefined): Promise<AuthenticationResult> {
+    async authenticate(username: string, password: string, otp?: string | undefined): Promise<AuthenticationResult> {
         if (process.env.NODE_ENV !== "development")
             throw Error("Not supported in production environments.");
 
-        if (user === "foo" && password === "bar")
+        if (username === "foo" && password === "bar")
             return AuthenticationResult.Success;
 
-        if (user === "otp" && password === "otp")
+        if (username === "otp" && password === "otp")
             return otp === "123" ? AuthenticationResult.Success : AuthenticationResult.OtpChallenge;
 
-        if (user === "john" && password === "doe")
+        if (username === "john" && password === "doe")
             return AuthenticationResult.Forbidden;
 
-        if (user === "bad" && password === "food")
+        if (username === "bad" && password === "food")
             return AuthenticationResult.Error;
 
         return AuthenticationResult.BadCredentials;
