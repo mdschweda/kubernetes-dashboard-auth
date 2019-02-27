@@ -1,7 +1,8 @@
 import axios from "axios";
 import status from "http-status-codes";
 import config from "../../config";
-import { IAuthenticationProvider, AuthenticationResult } from "../provider";
+import { IAuthenticationProvider } from "../provider";
+import { Authentication, AuthenticationError } from "../authentication";
 
 /**
  * An excerpt of the GitHub's API organizations endpoint response
@@ -41,39 +42,39 @@ export default class GitHubValidationProvider implements IAuthenticationProvider
     }
     
     /** @inheritdoc */
-    async authenticate(username: string, password: string, otp?: string | undefined): Promise<AuthenticationResult> {
-        try {
-            let resp = await axios.get(`https://api.github.com/user/${config.auth.github.team ? "teams" : "orgs"}`, {
-                auth: {
-                    username,
-                    password
-                },
-                headers: otp && {
-                    "X-GitHub-OTP": otp
-                }
-            });
+    async authenticate(username: string, password: string, otp?: string | undefined): Promise<Authentication> {
+        const authHeader = {
+            auth: {
+                username,
+                password
+            },
+            headers: otp && {
+                "X-GitHub-OTP": otp
+            }
+        };
 
+        try {
+            let resp = await axios.get("https://api.github.com/user/orgs", authHeader);
             if (resp.status === status.OK) {
-                if (config.auth.github.team) {
-                    let teams = resp.data as GitHubTeam[];
-                    return teams.find(team =>
-                        team.name === config.auth.github.team &&
-                        team.organization.login === config.auth.github.organization
-                    ) ?
-                        AuthenticationResult.Success : AuthenticationResult.Forbidden;
-                } else {
-                    let orgs = resp.data as GitHubOrg[];
-                    return orgs.find(org => org.login === config.auth.github.organization) ?
-                        AuthenticationResult.Success : AuthenticationResult.Forbidden;
+                let orgs = resp.data as GitHubOrg[];
+                if (!orgs.find(org => org.login === config.auth.github.organization))
+                    return Authentication.Fail(AuthenticationError.Forbidden);
+            
+                resp = await axios.get("https://api.github.com/user/teams", authHeader);
+                if (resp.status === status.OK) {
+                    let teams = (resp.data as GitHubTeam[]).map(t => t.name);
+                    return Authentication.Success(username, teams);
                 }
             }
         } catch (e) {
             if (e.response && e.response.status === status.UNAUTHORIZED)
-                return e.response.headers["x-github-otp"] ?
-                    AuthenticationResult.OtpChallenge : AuthenticationResult.BadCredentials;
+                if (!e.response.headers["x-github-otp"])
+                    return Authentication.Fail(AuthenticationError.BadCredentials);
+                else
+                    Authentication.Fail(otp ? AuthenticationError.OtpChallenge : AuthenticationError.BadOtp);
         }
 
-        return AuthenticationResult.Error;
+        return Authentication.Fail(AuthenticationError.Other);
     }
 
 }

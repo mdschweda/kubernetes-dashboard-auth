@@ -2,7 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import status from "http-status-codes";
 import sendStatic from "../static";
 import config from "../config";
-import { AuthenticationResult, AuthenticationProviderFactory } from "../authentication/provider";
+import { AuthenticationProviderFactory } from "../authentication/provider";
+import { AuthenticationError } from "../authentication/authentication";
 
 /**
  * Logs out an authenticated user.
@@ -35,24 +36,27 @@ export async function login(req: Request, res: Response) {
 
     let provider = await AuthenticationProviderFactory.getProvider(config.auth.provider);
     if (!provider)
-        return res.status(status.INTERNAL_SERVER_ERROR).json(AuthenticationResult.Error);
+        return res.status(status.INTERNAL_SERVER_ERROR).json(AuthenticationError.Other);
 
-    let result = await provider.authenticate(user, pwd, otp);
-    let code = ({
-        [AuthenticationResult.Success]: status.OK,
-        [AuthenticationResult.BadCredentials]: status.UNAUTHORIZED,
-        [AuthenticationResult.OtpChallenge]: status.UNAUTHORIZED,
-        [AuthenticationResult.BadOtp]: status.UNAUTHORIZED,
-        [AuthenticationResult.Forbidden]: status.FORBIDDEN,
-        [AuthenticationResult.Error]: status.INTERNAL_SERVER_ERROR
-    })[result];
+    let auth = await provider.authenticate(user, pwd, otp);
+    let code = auth.error && ({
+        [AuthenticationError.BadCredentials]: status.UNAUTHORIZED,
+        [AuthenticationError.OtpChallenge]: status.UNAUTHORIZED,
+        [AuthenticationError.BadOtp]: status.UNAUTHORIZED,
+        [AuthenticationError.Forbidden]: status.FORBIDDEN,
+        [AuthenticationError.Other]: status.INTERNAL_SERVER_ERROR
+    })[auth.error] || status.OK;
 
-    if (req.session && result === AuthenticationResult.Success)
+    if (req.session && !auth.error)
+        // TODO
+        // ~req.session.authenticated~ obsolete
+        // cache.getToken(...) => req.session.token
+        // req.session.token = undefined = logout
         req.session.authenticated = true;
-    else if (result === AuthenticationResult.OtpChallenge || result === AuthenticationResult.BadOtp)
+    else if (auth.error === AuthenticationError.OtpChallenge || auth.error === AuthenticationError.BadOtp)
         res.setHeader("x-otp", "required");
 
-    return res.status(code).json(result);
+    return res.status(code).json(auth.error);
 }
 
 /**
@@ -63,10 +67,10 @@ export async function login(req: Request, res: Response) {
  * @param next The next middleware in the pipeline.
  */
 export async function guard(req: Request, res: Response, next: NextFunction) {
-    if (!(req.session && req.session.authenticated))
+    if (!(req.session && req.session.token))
         await sendStatic(res, req.path);
     else {
-        req.headers.authorization = `Bearer ${config.auth.token}`
+        req.headers.authorization = `Bearer ${req.session.token}`
         next();
     }
 }

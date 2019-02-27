@@ -2,7 +2,8 @@ import axios from "axios";
 import status from "http-status-codes";
 import { stringify as urlencoded } from "querystring";
 import config from "../../config";
-import { IAuthenticationProvider, AuthenticationResult } from "../provider";
+import { IAuthenticationProvider } from "../provider";
+import { Authentication, AuthenticationError } from "../authentication";
 
 /**
  * Implements an {@link IAuthenticationProvider} that validates Azure AD accounts.
@@ -24,7 +25,7 @@ export default class AzureADValidationProvider implements IAuthenticationProvide
     }
 
     /** @inheritdoc */
-    async authenticate(username: string, password: string, otp?: string | undefined): Promise<AuthenticationResult> {
+    async authenticate(username: string, password: string, otp?: string | undefined): Promise<Authentication> {
         let resp;
 
         try {
@@ -50,14 +51,11 @@ export default class AzureADValidationProvider implements IAuthenticationProvide
                 if (e.response.data.error === "invalid_grant" && e.response.data.suberror === "consent_required")
                     console.error("[Azure AD] Client requires onetime administrator consent.");
                 else
-                    return AuthenticationResult.BadCredentials;
+                    return Authentication.Fail(AuthenticationError.BadCredentials);
             }
 
-            return AuthenticationResult.Error;
+            return Authentication.Fail(AuthenticationError.Other);
         }
-
-        if (!config.auth.azuread.group)
-            return AuthenticationResult.Success;
 
         if (resp.status === status.OK)
             try {
@@ -77,13 +75,13 @@ export default class AzureADValidationProvider implements IAuthenticationProvide
                 if (resp.status !== status.OK)
                     throw new Error(resp.data);
 
-                return resp.data && resp.data.value && (resp.data.value as string[]).includes(config.auth.azuread.group) ?
-                    AuthenticationResult.Success : AuthenticationResult.Forbidden;
+                let groups = resp.data && resp.data.value && resp.data.value as string[];
+                Authentication.Success(username, groups);
             } catch(e) {
                 console.error(`[Azure AD] Error while retrieving groups: ${e}`);
             }
 
-        return AuthenticationResult.Error;
+        return Authentication.Fail(AuthenticationError.Other);
     }
 
 }

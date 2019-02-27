@@ -1,6 +1,7 @@
 import ldap from "ldapjs";
-import { IAuthenticationProvider, AuthenticationResult } from "../provider";
+import { IAuthenticationProvider } from "../provider";
 import config from "../../config";
+import { Authentication, AuthenticationError } from "../authentication";
 
 /**
  * Provides methods to search a LDAP directory.
@@ -85,14 +86,14 @@ export default class LDAPValidationProvider implements IAuthenticationProvider  
     }
 
     /** @inheritdoc */
-    async authenticate(username: string, password: string): Promise<AuthenticationResult> {
+    async authenticate(username: string, password: string): Promise<Authentication> {
         let client = new LdapClient();
 
         try {
             await client.bind(config.auth.ldap.bindUser, config.auth.ldap.bindPassword);
         } catch (e) {
             console.error(`[LDAP] Bind failed: ${e}`);
-            return AuthenticationResult.Error;
+            return Authentication.Fail(AuthenticationError.Other);
         }
 
         let match;
@@ -104,26 +105,22 @@ export default class LDAPValidationProvider implements IAuthenticationProvider  
             });
         } catch (e) {
             console.error(`[LDAP] Searching the directory failed: ${e}`);
-            return AuthenticationResult.Error;
+            return Authentication.Fail(AuthenticationError.Other);
         }
 
         if (match) {
-            if (config.auth.ldap.group && !match.memberOf.includes(config.auth.ldap.group))
-                return AuthenticationResult.Forbidden;
-            else {
-                try {
-                    if (!await client.bind(match.dn, password))
-                        return AuthenticationResult.BadCredentials;
-                } catch {
-                    return AuthenticationResult.BadCredentials;
-                }
+            try {
+                if (!await client.bind(match.dn, password))
+                    return Authentication.Fail(AuthenticationError.BadCredentials);
+            } catch {
+                return Authentication.Fail(AuthenticationError.BadCredentials);
             }
         } else {
-            return AuthenticationResult.BadCredentials;
+            return Authentication.Fail(AuthenticationError.BadCredentials);
         }
 
         await client.unbind();
-        return AuthenticationResult.Success;
+        return Authentication.Success(username, match.memberOf);
     }
     
 }

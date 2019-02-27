@@ -24,8 +24,11 @@ export default async function validate(config: Configuration) : Promise<string[]
         );
 
     !(config.tls.cert && config.tls.key) && errors.push("Certificate improperly configured.");
-    !config.auth.token && errors.push("No bearer token configured.");
     !config.auth.provider && errors.push("No authentication provider specified.")
+    if (typeof config.auth.acl === "string")
+        !config.auth.acl && errors.push("No default service account specified.");
+    else if (typeof config.auth.acl === "object")
+        !(config.auth.acl.fallback || config.auth.acl.users || config.auth.acl.groups) && errors.push("The access control list is empty.");
     
     try {
         let upstream = url.parse(config.upstream);

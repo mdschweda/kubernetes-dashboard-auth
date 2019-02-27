@@ -41,6 +41,14 @@ function apiServerAddress() {
         return `https://${process.env.KUBERNETES_SERVICE_HOST}:${process.env.KUBERNETES_PORT_443_TCP_PORT}/api/v1/`;
 }
 
+function tryDeserialize(content: string | undefined) {
+    if (content) {
+        try {
+            return JSON.parse(content)
+        } catch { }
+    }
+}
+
 /**
  * The application configuration.
  */
@@ -72,8 +80,19 @@ export interface Configuration {
     auth: {
         /** The used authentication provider. */
         provider: string;
-        // TODO acr: "serviceAccount" or acr: { "$default": "serviceAccount1", "user1": "serviceAccount2", "user2": "serviceAccount3" }
-        token: string;
+        /** The ACL (access control list) that maps users to Kubernetes service accounts. Default is `kube-system/dashboard-admin`. */
+        acl: {
+            /** The service account used when no entry in `users` or `groups` matches the authenticated user. Default is `kube-system/dashboard-admin`. Unset this value to whitelist authorized users. */
+            fallback: string | undefined,
+            /** Key-value-pairs mapping user names to Kubernetes service accounts. */
+            users: {
+                [name: string]: string
+            } | undefined,
+            /** Key-value-pairs mapping user group names to Kubernetes service accounts. The `auth.provider` implementations define what is considered a group. */
+            groups: {
+                [name: string]: string
+            } | undefined
+        } | string,
         /** Configuration used in conunction with provider `ldap`. */
         ldap: {
             /** The LDAP server address. */
@@ -86,20 +105,14 @@ export interface Configuration {
             baseDN: string;
             /** The name of the LDAP attribute that holds the account name. Default is `sAMAccountName`. */
             userAttribute: string;
-            /** When set, the user must be member of this group to access the dashboard. */
-            group: string | undefined;
         },
         github: {
             /** The name of the GitHub organization as displayed in the URL of the organization page: `github.com/orgs/{{organization}}` */
             organization: string;
-            /** When set, the user must be member of this team to access the dashboard. */
-            team: string | undefined;
         },
         azuread: {
             /** The id of the Azure AD tenant as displayed in the "Properties" blade ("Directory ID") */
             tenant: string,
-            /** When set, the user must be member of this Azure AD group to access the dashboard. Object ID as displayed in the "Overview" blade of the group.  */
-            group: string | undefined,
             /** Required information of the registered AZure AD app. */
             client: {
                 /** The application ID as displayed in the "Overview" blade of the app. */
@@ -120,9 +133,7 @@ const defaults = {
         }
     },
     auth: {
-        acr: {
-            "$default": "dashboard"
-        },
+        acl: "dashboard-admin",
         ldap: {
             userAttribute: "sAMAccountName"
         }
@@ -147,6 +158,7 @@ const providedValues = {
     },
     auth: {
         provider: process.env.CONFIG_AUTH_PROVIDER,
+        acl: tryDeserialize(process.env.CONFIG_AUTH_ACL),
         token: process.env.CONFIG_AUTH_TOKEN,
         ldap: {
             server: process.env.CONFIG_AUTH_LDAP_SERVER,
@@ -154,15 +166,12 @@ const providedValues = {
             bindPassword: process.env.CONFIG_AUTH_LDAP_BIND_PASSWORD,
             baseDN: process.env.CONFIG_AUTH_LDAP_BASE_DN,
             userAttribute: process.env.CONFIG_AUTH_LDAP_USER_ATTRIBUTE,
-            group: process.env.CONFIG_AUTH_LDAP_USER_GROUP,
         },
         github: {
             organization: process.env.CONFIG_AUTH_GITHUB_ORGANIZATION,
-            team: process.env.CONFIG_AUTH_GITHUB_TEAM
         },
         azuread: {
             tenant: process.env.CONFIG_AUTH_AZUREAD_TENANT,
-            group: process.env.CONFIG_AUTH_AZUREAD_GROUP,
             client: {
               id: process.env.CONFIG_AUTH_AZUREAD_CLIENT_ID,
               secret: process.env.CONFIG_AUTH_AZUREAD_CLIENT_SECRET

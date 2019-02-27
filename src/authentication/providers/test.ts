@@ -1,4 +1,5 @@
-import { IAuthenticationProvider, AuthenticationResult } from "../provider";
+import { IAuthenticationProvider } from "../provider";
+import { Authentication, AuthenticationError } from "../authentication";
 
 /**
  * Implements an {@link IAuthenticationProvider} for testing purposes. This provider is not intended for usage in
@@ -20,23 +21,24 @@ export default class TestValidationProvider implements IAuthenticationProvider  
         return [];
     }
 
-    async authenticate(username: string, password: string, otp?: string | undefined): Promise<AuthenticationResult> {
+    async authenticate(username: string, password: string, otp?: string | undefined): Promise<Authentication> {
         if (process.env.NODE_ENV !== "development")
             throw Error("Not supported in production environments.");
 
         if (username === "foo" && password === "bar")
-            return AuthenticationResult.Success;
+            return Authentication.Success(username, [ "GroupA", "GroupB" ]);
 
         if (username === "otp" && password === "otp")
-            return otp === "123" ? AuthenticationResult.Success : AuthenticationResult.OtpChallenge;
+            return otp === "123" ?
+                Authentication.Success(username, []) : Authentication.Fail(AuthenticationError.OtpChallenge);
 
         if (username === "john" && password === "doe")
-            return AuthenticationResult.Forbidden;
+            return Authentication.Fail(AuthenticationError.Forbidden);
 
         if (username === "bad" && password === "food")
-            return AuthenticationResult.Error;
+            return Authentication.Fail(AuthenticationError.Other);
 
-        return AuthenticationResult.BadCredentials;
+        return Authentication.Fail(AuthenticationError.BadCredentials);
     }
 
 }
