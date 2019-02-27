@@ -27,12 +27,31 @@ function devel() {
     } catch { }
 }
 
+// Get service account token from auto-mounted Kubernetes secret
+function tokenFromAutomount() {
+    let root = path.parse(__dirname).root;
+    let secret = path.join(root, "run", "secrets", "kubernetes.io", "serviceaccount", "token");
+    if (fs.existsSync(secret) && fs.lstatSync(secret).isFile())
+        return fs.readFileSync(secret).toString();
+}
+
+// Get api server address from Kubernetes environment variables
+function apiServerAddress() {
+    if (process.env.KUBERNETES_SERVICE_HOST && process.env.KUBERNETES_PORT_443_TCP_PORT)
+        return `https://${process.env.KUBERNETES_SERVICE_HOST}:${process.env.KUBERNETES_PORT_443_TCP_PORT}/api/v1/`;
+}
+
 /**
  * The application configuration.
  */
 export interface Configuration {
     /** The url of the dashboard. Default is `https://kubernetes-dashboard.kube-system.svc.cluster.local:8443/`. */
     upstream: string;
+    /** API server information */
+    api: {
+        readonly server: string;
+        readonly token: string;
+    },
     /** The SSL configuration. */
     tls: {
         /** The server certificate. */
@@ -112,6 +131,10 @@ const defaults = {
 
 const providedValues = {
     upstream: process.env.CONFIG_UPSTREAM,
+    api: {
+        server: apiServerAddress(),
+        token: tokenFromAutomount()
+    },
     tls: {
         cert: process.env.CONFIG_TLS_CERT && decode(process.env.CONFIG_TLS_CERT),
         key: process.env.CONFIG_TLS_KEY && decode(process.env.CONFIG_TLS_KEY)

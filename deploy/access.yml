@@ -1,0 +1,54 @@
+# Authentication proxy service account
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dashboard-auth-proxy
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: dashboard-auth-proxy
+    app.kubernetes.io/part-of: dashboard
+automountServiceAccountToken: true
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dashboard-authenticator
+  labels:
+    app.kubernetes.io/name: dashboard-authenticator
+    app.kubernetes.io/part-of: dashboard
+rules:
+  # List and read service accounts
+  - resources:
+    - serviceaccounts
+    verbs:
+    - get
+    - list
+    apiGroups:
+      - ""
+  # Get tokens for impersonation
+  - resources:
+    - secrets
+    verbs:
+      - get
+    apiGroups:
+      - ""
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: dashboard-auth-proxy
+  labels:
+    app.kubernetes.io/name: dashboard-auth-proxy
+    app.kubernetes.io/part-of: dashboard
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: dashboard-authenticator
+subjects:
+  - kind: ServiceAccount
+    name: dashboard-auth-proxy
+    namespace: kube-system

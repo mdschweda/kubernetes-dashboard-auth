@@ -1,4 +1,4 @@
-# Kubernetes Dashboard Auth
+# Kubernetes Dashboard Authentication Proxy
 
 An authentication proxy for the [Kubernetes dashboard](https://github.com/kubernetes/dashboard) that allows you to login with individual user accounts.
 

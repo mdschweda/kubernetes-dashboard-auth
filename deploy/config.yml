@@ -1,7 +1,15 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: kubernetes-dashboard-auth-config
+  name: dashboard-auth-config
 data:
-  key: value
-  
+  key: value # TODO
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dashboard-auth-secret
+data:
+  key: value # TODO

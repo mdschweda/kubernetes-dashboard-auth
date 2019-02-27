@@ -1,14 +1,18 @@
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: kubernetes-dashboard-auth
+  name: dashboard-auth-proxy
   namespace: kube-system
+  labels:
+    app.kubernetes.io/name: dashboard-auth-proxy
+    app.kubernetes.io/part-of: dashboard
 spec:
   replicas: 1
   template:
     metadata:
-      labels:
-        k8s-app: kubernetes-dashboard-auth
+    labels:
+      app.kubernetes.io/name: dashboard-auth-proxy
+      app.kubernetes.io/part-of: dashboard
     spec:
       containers:
       - name: kubernetes-dashboard-auth
