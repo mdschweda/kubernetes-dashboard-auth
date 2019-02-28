@@ -3,12 +3,11 @@ FROM node:10 as build-stage
 WORKDIR /app
 
 COPY package.json package-lock.json ./
+RUN npm i --only=prod --prefix dist .
 RUN npm i
-RUN npm i --prefix ./dist --only=prod
 
-COPY src/static dist/static
-COPY src tsconfig.json ./
-RUN npx tsc
+COPY . .
+RUN npx tsc && npm run build-frontend
 
 FROM node:10
 
@@ -16,4 +15,4 @@ WORKDIR /app
 
 COPY --from=build-stage /app/dist .
 
-CMD [ "node", "/app/backend/index.js" ]
+CMD [ "node", "/app/index.js" ]

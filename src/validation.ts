@@ -12,19 +12,22 @@ export default async function validate(config: Configuration) : Promise<string[]
 
     const isDevel = (process.env.NODE_ENV = process.env.NODE_ENV || "production") === "development";
 
+    if (!(config.api.server && config.api.token))
+        errors.push("Are you running the app outside Kubernetes? Additional steps are required...");
+
     if (!config.api.server)
         errors.push(
-            "Kubernetes API server address not set. " + (isDevel ?
+            "API server address not set. " + (isDevel ?
                 "Manually configure the address in development.config.json." :
-                "Manually provide environment variables KUBERNETES_SERVICE_HOST and KUBERNETES_PORT_443_TCP_PORT for the deployment."
+                "Provide environment variables KUBERNETES_SERVICE_HOST and KUBERNETES_PORT_443_TCP_PORT to the app."
             )
         );
 
     if (!config.api.token)
         errors.push(
-            "Kubernetes service account token not set. " + (isDevel ?
+            "Service account token not present. " + (isDevel ?
                 "Manually configure the token in development.config.json. Execute \"kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep <your-service-account> | awk '{print $1}')\" to retrieve a token." :
-                "Make sure the service account dashboard-auth-proxy is present or redeploy the application to your cluster."
+                "Provide an access token under /run/secrets/kubernetes.io/serviceaccount/token with scope serviceaccounts:list+read and secrets:read. See deployment yaml."
             )
         );
 

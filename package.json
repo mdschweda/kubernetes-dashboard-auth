@@ -4,7 +4,8 @@
   "description": "An authentication proxy for the Kubernetes Dashboard",
   "scripts": {
     "build-frontend": "npx webpack",
-    "watch-frontend": "npx webpack --watch"
+    "watch-frontend": "npx webpack --watch",
+    "start": "node dist/index.js"
   },
   "keywords": [
     "authentication",

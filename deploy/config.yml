@@ -2,8 +2,55 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: dashboard-auth-config
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: dashboard-auth-config
+    app.kubernetes.io/part-of: dashboard
 data:
-  key: value # TODO
+  # Dashboard
+  #------------------------------------------------------------------------------------------------
+  # The url of the dashboard. Default is "https://kubernetes-dashboard.kube-system.svc.cluster.local:8443/".
+  # upstream: "https://url-from-within-the-cluster:123456/"
+
+  # TLS
+  #------------------------------------------------------------------------------------------------
+  # [REQUIRED] The server certificate.
+  tls.cert: "base64 encoded pem file"
+
+  # Server ports
+  #------------------------------------------------------------------------------------------------
+  # The HTTP port. Default is "80".
+  # host.port.http: "123"
+  # The HTTPS port. Default is "443".
+  # host.port.https: "456"
+
+  # Authentication
+  #------------------------------------------------------------------------------------------------
+  # [REQUIRED] The used authentication provider.
+  auth.provider: "ldap or github or azuread"
+
+  # When using authentication provider "ldap"...
+  #------------------------------------------------------------------------------------------------
+  # [REQUIRED] The LDAP server address.
+  # auth.ldap.server: "ldap://your-directory-server:389"
+  # [REQUIRED] The distinguished name of the account to use when connecting to the LDAP server.
+  # auth.ldap.bindUser: "CN=k8s,OU=users,DC=my-company,DC=local"
+  # The distinguished name of the entity where to search in.
+  # auth.ldap.baseDN: "OU=DevOps,DC=my-company,DC=local"
+  # The name of the LDAP attribute that holds the account name. Default is "sAMAccountName".
+  # auth.ldap.userAttribute: "mail"
+
+  # When using authentication provider "github"...
+  #------------------------------------------------------------------------------------------------
+  # [REQUIRED] The name of the GitHub organization as displayed in the URL of the organization page: github.com/orgs/{{organization}}
+  # auth.github.organization: ""
+
+  # When using authentication provider "azuread"...
+  #------------------------------------------------------------------------------------------------
+  # [REQUIRED] The id of the Azure AD tenant as displayed in the "Properties" blade ("Directory ID")
+  # auth.azuread.tenant: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+  # [REQUIRED] The application ID as displayed in the "Overview" blade of the app.
+  # auth.azuread.client.id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
 ---
 
@@ -11,5 +58,22 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: dashboard-auth-secret
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: dashboard-auth-secret
+    app.kubernetes.io/part-of: dashboard
 data:
-  key: value # TODO
+  # TLS
+  #------------------------------------------------------------------------------------------------
+  # [REQUIRED] The private key of the server.
+  tls.key: "base64 encoded pem file"
+
+  # When using authentication provider "ldap"...
+  #------------------------------------------------------------------------------------------------
+  # [REQUIRED] The password to use when connecting to the LDAP server.
+  # auth.ldap.bindPassword: "•••••••"
+
+  # When using authentication provider "azuread"...
+  #------------------------------------------------------------------------------------------------
+  # [REQUIRED] The client secret value as displayed in the "Certificates & secrets" blade of the app.
+  # auth.azuread.client.secret: "•••••••"

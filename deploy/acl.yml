@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-auth-config
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: dashboard-auth-config
+    app.kubernetes.io/part-of: dashboard
+data:
+  default: dashboard-admin
+  users: |
+  groups: |

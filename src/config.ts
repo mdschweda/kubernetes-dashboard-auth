@@ -53,7 +53,7 @@ function tryDeserialize(content: string | undefined) {
  * The application configuration.
  */
 export interface Configuration {
-    /** The url of the dashboard. Default is `https://kubernetes-dashboard.kube-system.svc.cluster.local:8443/`. */
+    /** The url of the dashboard (from within the cluster). Default is `https://kubernetes-dashboard.kube-system.svc.cluster.local:8443/`. */
     upstream: string;
     /** API server information */
     api: {
@@ -159,7 +159,6 @@ const providedValues = {
     auth: {
         provider: process.env.CONFIG_AUTH_PROVIDER,
         acl: tryDeserialize(process.env.CONFIG_AUTH_ACL),
-        token: process.env.CONFIG_AUTH_TOKEN,
         ldap: {
             server: process.env.CONFIG_AUTH_LDAP_SERVER,
             bindUser: process.env.CONFIG_AUTH_LDAP_BIND_USER,
@@ -184,10 +183,10 @@ const config = merge(merge(defaults, devel()), providedValues) as Configuration;
 
 validate(config).then(errors => {
     if (errors.length) {
-        console.error("⛔ Please, revise your configuration:")
+        console.error("⛔\0 Please, revise your configuration:")
     
         for (let e of errors)
-            console.error(`- ${e}`);
+            console.error(`• ${e}`);
     
         console.error("See https://github.com/mdschweda/kubernetes-dashboard-auth for details.");
         process.exit(1);
