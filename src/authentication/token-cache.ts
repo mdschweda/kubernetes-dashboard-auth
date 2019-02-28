@@ -2,26 +2,11 @@ import axios, { AxiosRequestConfig } from "axios";
 import { Agent } from "https";
 import status from "http-status-codes";
 import config from "../config";
+import { ServiceAccount, ServiceAccountList, TokenSecret } from "./service-account";
 
-interface TokenSecret {
-    data: {
-        token: string
-    }
-}
-
-interface ServiceAccountList {
-    items: {
-        metadata: {
-            name: string;
-            namespace: string;
-        };
-
-        secrets: {
-            name: string;
-        }[]
-    }[];
-}
-
+/**
+ * Provides functions for retrieving and caching access tokens of Kubernetes service accounts.
+ */
 export default class TokenCache {
 
     private static readonly _cache = new Map<string, string>();
@@ -35,29 +20,31 @@ export default class TokenCache {
         })
     };
 
-    static async getToken(serviceAccount: string, namespace: string = "default") : Promise<string | undefined> {
-        serviceAccount = serviceAccount && serviceAccount.toLowerCase();
-        namespace = namespace && namespace.toLowerCase() || "default";
-
-        if (this._cache.has(`${namespace}/${serviceAccount}`))
-            return this._cache.get(`${namespace}/${serviceAccount}`);
+    /**
+     * Retrieves the access token of a service account from the Kubernetes cluster.
+     * @param serviceAccount The name of the service account.
+     * @param namespace The namespace wherein the service account is defined.
+     */
+    static async getToken(sa: ServiceAccount) : Promise<string | undefined> {
+        if (this._cache.has(sa.fqn))
+            return this._cache.get(sa.fqn);
 
         try {
             let resp = await axios.get(this.apiEndpoint("/serviceaccounts"), this.bearerAuth);
             if (resp.status === status.OK) {
                 let serviceAccounts = resp.data as ServiceAccountList;
-                let match = serviceAccounts.items.find(acc =>
-                    acc.metadata.name.toLowerCase() === serviceAccount &&
-                    acc.metadata.namespace.toLowerCase() === namespace
+                let match = serviceAccounts.items.find(item =>
+                    item.metadata.name === sa.name.toLowerCase() &&
+                    item.metadata.namespace === sa.namespace.toLowerCase()
                 );
 
                 let secret = match && match.secrets.length && match.secrets[0].name;
                 if (secret) {
-                    resp = await axios.get(this.apiEndpoint(`/namespaces/${namespace}/secrets/${secret}`), this.bearerAuth);
+                    resp = await axios.get(this.apiEndpoint(`/namespaces/${sa.namespace}/secrets/${secret}`), this.bearerAuth);
                     if (resp.status === status.OK) {
                         let token = (resp.data as TokenSecret).data.token;
                         if (token) {
-                            this._cache.set(`${namespace}/${serviceAccount}`, token);
+                            this._cache.set(sa.fqn, token);
                             return token;
                         }
                     }
@@ -69,6 +56,7 @@ export default class TokenCache {
         }
     }
 
+    // Combine URL path
     private static apiEndpoint(path: string) {
         return config.api.server.replace(/\/+$/, "") + "/" + path.replace(/^\/+/, "");
     };

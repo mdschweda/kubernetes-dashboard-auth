@@ -21,25 +21,33 @@ function ready(fn) {
         });
 }
 
-const ValidationResult = {
-    success: 0,
-    badCredentials: 1,
-    otpChallenge: 2,
-    badOtp: 3,
-    forbidden: 4,
-    error: 5
+/**
+ * Possible errors during an user authentication.
+ */
+const AuthenticationError = {
+    /** The provided credentials were invalid. */
+    badCredentials: "BadCredentials",
+    /** The user has been asked to enter an validation code. */
+    otpChallenge: "OtpChallenge",
+    /** The provided validation code was invalid. */
+    badOtp: "BadOtp",
+    /** The authenticated user is not allowed to use the resource. */
+    forbidden: "Forbidden",
+    /** An error occured while validating the user credentials. */
+    other: "Other"
 }
 
 /**
- * 
- * @param {*} s 
- * @param {boolean} err 
+ * Sets the status label text and style.
+ * @param {*} s The status to display.
+ * @param {boolean} err `true` if the status is an error. Otherwise `false`.
  */
 function setStatus(s, err = false) {
     dom.id("status").textContent = s;
     dom.classIf(err, "status", "error");
 }
 
+/** Event handler for the "Sign in" button */
 async function onSignIn() {
     let requireOtp = !dom.hasClass(dom.id("otp").parentNode, "hidden");
     let user = dom.value("user");
@@ -61,7 +69,7 @@ async function onSignIn() {
             location.reload();
         else if (result.status === 401) {
             if (result.headers.has("x-otp")) {
-                if (result.content === ValidationResult.badOtp)
+                if (result.content === AuthenticationError.badOtp)
                     setStatus("The security code is invalid.", true);
                 else {
                     dom.removeClass(dom.id("otp").parentNode, "hidden");

@@ -76,7 +76,7 @@ export default class AzureADValidationProvider implements IAuthenticationProvide
                     throw new Error(resp.data);
 
                 let groups = resp.data && resp.data.value && resp.data.value as string[];
-                Authentication.Success(username, groups);
+                return Authentication.Success(username, groups);
             } catch(e) {
                 console.error(`[Azure AD] Error while retrieving groups: ${e}`);
             }

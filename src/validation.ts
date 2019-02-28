@@ -2,6 +2,11 @@ import url from "url";
 import { AuthenticationProviderFactory } from "./authentication/provider";
 import { Configuration } from "./config";
 
+/**
+ * Validates and sanitizes the application configuration.
+ * @param config The configuration object to validate.
+ * @returns An array of configuration errors found during the validation process.
+ */
 export default async function validate(config: Configuration) : Promise<string[]> {
     let errors = [];
 

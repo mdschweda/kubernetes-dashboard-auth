@@ -13,14 +13,17 @@ import { Authentication, AuthenticationError } from "../authentication";
  */
 export default class TestValidationProvider implements IAuthenticationProvider  {
 
+    /** @inheritdoc */
     get name() : string {
         return "test";
     }
 
+    /** @inheritdoc */
     get configurationErrors(): string[] {
         return [];
     }
 
+    /** @inheritdoc */
     async authenticate(username: string, password: string, otp?: string | undefined): Promise<Authentication> {
         if (process.env.NODE_ENV !== "development")
             throw Error("Not supported in production environments.");

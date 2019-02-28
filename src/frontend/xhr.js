@@ -1,16 +1,16 @@
 /**
  * @typedef {Object} XhrResponse
- * @property {number} status
- * @property {any} content
- * @property {Map<string, string>} headers
+ * @property {number} status The status code of the response.
+ * @property {any} content The content of the response.
+ * @property {Map<string, string>} headers Tge headers of the response.
  */
 
 /**
- * 
- * @param {string} method 
- * @param {string} path 
- * @param {any} body
- * @returns {Promise.<XhrResponse>} path 
+ * Make an AJAX request.
+ * @param {string} method The http method of the request.
+ * @param {string} path The server path of the request.
+ * @param {any} body The content of the request.
+ * @returns {Promise.<XhrResponse>} The server response.
  */
 export default function xhr(method, path, body = undefined) {
     return new Promise((resolve, reject) => {

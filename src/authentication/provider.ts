@@ -28,7 +28,7 @@ export interface IAuthenticationProvider {
 }
 
 /**
- * Creates instaces of {@link IAuthenticationProvider}.
+ * Creates instances of {@link IAuthenticationProvider}.
  */
 export class AuthenticationProviderFactory {
 

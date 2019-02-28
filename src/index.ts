@@ -11,12 +11,19 @@ import * as authentication from "./middleware/authentication";
 import proxy from "./middleware/reverse-proxy";
 
 const app = express()
+    // logging
     .use(morgan("combined"))
+    // sessions (cookie authentication)
     .use(session)
+    // htpp -> https
     .all("*", upgradeHttp)
+    // Terminating sessions
     .get("/logout", authentication.logout)
+    // Initiating sessions
     .post("/login", bodyParser.json(), authentication.login)
+    // Not authenticated: Serve local content
     .all("*", authentication.guard)
+    // Authenticated: Forward requests to dashboard
     .all("*", proxy);
 
 http.createServer(app).listen(config.host.port.http);

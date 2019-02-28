@@ -21,7 +21,15 @@ body {
         transform: translate(-50%, -50%);
     }
 
-    aside {
+}
+
+.login {
+
+    & > section {
+        width: 300px;
+    }
+
+    & > aside {
         img {
             height: 300px;
             margin-left: 100px;
@@ -33,6 +41,7 @@ body {
             }
         }
     }
+
 }
 
 

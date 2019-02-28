@@ -62,7 +62,7 @@ export default class GitHubValidationProvider implements IAuthenticationProvider
             
                 resp = await axios.get("https://api.github.com/user/teams", authHeader);
                 if (resp.status === status.OK) {
-                    let teams = (resp.data as GitHubTeam[]).map(t => t.name);
+                    let teams = (resp.data as GitHubTeam[]).map(team => team.name);
                     return Authentication.Success(username, teams);
                 }
             }
@@ -71,7 +71,7 @@ export default class GitHubValidationProvider implements IAuthenticationProvider
                 if (!e.response.headers["x-github-otp"])
                     return Authentication.Fail(AuthenticationError.BadCredentials);
                 else
-                    Authentication.Fail(otp ? AuthenticationError.OtpChallenge : AuthenticationError.BadOtp);
+                    return Authentication.Fail(otp ? AuthenticationError.BadOtp : AuthenticationError.OtpChallenge);
         }
 
         return Authentication.Fail(AuthenticationError.Other);

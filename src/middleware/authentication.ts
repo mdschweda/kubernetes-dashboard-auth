@@ -4,6 +4,7 @@ import sendStatic from "../static";
 import config from "../config";
 import { AuthenticationProviderFactory } from "../authentication/provider";
 import { AuthenticationError } from "../authentication/authentication";
+import tokenCache from "../authentication/token-cache";
 
 /**
  * Logs out an authenticated user.
@@ -13,8 +14,10 @@ import { AuthenticationError } from "../authentication/authentication";
  * @param res The response object.
  */
 export function logout(req: Request, res: Response) {
-    if (req.session && req.session.authenticated)
-        req.session.destroy(() => console.log("Session ended"));
+    if (req.session && req.session.token) {
+        let username = req.session.username;
+        req.session.destroy(() => console.log(`[Session] Session for ${username} terminated.`));
+    }
 
     res.redirect("/");
 }
@@ -47,21 +50,32 @@ export async function login(req: Request, res: Response) {
         [AuthenticationError.Other]: status.INTERNAL_SERVER_ERROR
     })[auth.error] || status.OK;
 
-    if (req.session && !auth.error)
-        // TODO
-        // ~req.session.authenticated~ obsolete
-        // cache.getToken(...) => req.session.token
-        // req.session.token = undefined = logout
-        req.session.authenticated = true;
-    else if (auth.error === AuthenticationError.OtpChallenge || auth.error === AuthenticationError.BadOtp)
+    if (req.session && !auth.error) {
+        let sa = auth.getServiceAccount();
+        if (!sa)
+            return res.status(status.FORBIDDEN).json(AuthenticationError.Forbidden);
+        else {
+            let token = await tokenCache.getToken(sa);
+            if (!token) {
+                console.error(`[Auth] Couldn't retrieve access token for service account ${sa.fqn}`);
+                return res.status(status.INTERNAL_SERVER_ERROR).json(AuthenticationError.Other);
+            } else {
+                req.session.token = token;
+                req.session.username = auth.username;
+                console.log(`[Auth] Authenticated ${auth.username} as ${sa.fqn}.`);
+                console.log("[Session] Session started.");
+            }
+        }
+    } else if (auth.error === AuthenticationError.OtpChallenge || auth.error === AuthenticationError.BadOtp) {
         res.setHeader("x-otp", "required");
+        console.log("[Auth] Two factor authentication challenge.")
+    }
 
     return res.status(code).json(auth.error);
 }
 
 /**
- * A middleware that retrieves resources from the upstream server when the request is authenticated
- * and blocks access otherwise.
+ * A middleware that serves local content for unauthenticated requests.
  * @param req The request object.
  * @param res The response object.
  * @param next The next middleware in the pipeline.
