@@ -1,12 +1,23 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: dashboard-auth-config
+  name: dashboard-auth-acl
   namespace: kube-system
   labels:
-    app.kubernetes.io/name: dashboard-auth-config
+    app.kubernetes.io/name: dashboard-auth-acl
     app.kubernetes.io/part-of: dashboard
 data:
-  default: dashboard-admin
+  # The access control list maps users and groups to Kubernetes service accounts.
+
+  # Map specific users
   users: |
+    # user1=namespace/serviceaccount
+    # user2=mynamespace/default
+
+  # Map user groups (defined by the configured authentication provider)
   groups: |
+    # administrators=kube-system/cluster-admin
+
+  # The service account used when no entry in "users" or "groups" matches the authenticated user.
+  # Unset this value to explicitly whitelist authorized users
+  fallback: kube-system/dashboard-admin

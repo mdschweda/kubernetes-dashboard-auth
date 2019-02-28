@@ -20,7 +20,6 @@ spec:
       containers:
       - name: dashboard-auth-proxy
         image: mdschweda/kubernetes-dashboard-auth
-        # https://github.com/kubernetes/dashboard/wiki/Installation#recommended-setup
         env:
           - name: CONFIG_UPSTREAM
             valueFrom:
@@ -109,5 +108,19 @@ spec:
                 name: dashboard-auth-secret
                 key: auth.azuread.client.secret
                 optional: true
+        volumeMounts:
+          - name: acl
+            mountPath: /app/acl
       serviceAccountName: dashboard-auth-proxy
       automountServiceAccountToken: true
+      volumes:
+        - name: acl
+          configMap:
+            name: dashboard-auth-acl
+            items:
+              - key: default
+                path: default
+              - key: users
+                path: users
+              - key: groups
+                path: groups
