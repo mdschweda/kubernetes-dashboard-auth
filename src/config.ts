@@ -1,8 +1,10 @@
 import fs from "fs";
 import path from "path";
-import { decode } from "./base64";
 import { merge } from "lodash";
 import validate from "./validation";
+import { encode } from "./base64";
+
+const __root = path.parse(__dirname).root;
 
 // Development configuration (development.config.json)
 function devel() {
@@ -27,25 +29,33 @@ function devel() {
     } catch { }
 }
 
-// Get service account token from auto-mounted Kubernetes secret
-function tokenFromAutomount() {
-    let root = path.parse(__dirname).root;
-    let secret = path.join(root, "run", "secrets", "kubernetes.io", "serviceaccount", "token");
-    if (fs.existsSync(secret) && fs.lstatSync(secret).isFile())
-        return fs.readFileSync(secret).toString();
-}
-
 // Get api server address from Kubernetes environment variables
 function apiServerAddress() {
     if (process.env.KUBERNETES_SERVICE_HOST && process.env.KUBERNETES_PORT_443_TCP_PORT)
         return `https://${process.env.KUBERNETES_SERVICE_HOST}:${process.env.KUBERNETES_PORT_443_TCP_PORT}/api/v1/`;
 }
 
-function tryDeserialize(content: string | undefined) {
-    if (content) {
-        try {
-            return JSON.parse(content)
-        } catch { }
+function toKeyValuePairs(s: string | undefined) {
+    let map : { [key: string]: string } = { };
+    if (s) {
+        for (let ln of s.split(/\r?\n/)) {
+            let tokens = ln.split("=", 2);
+            if (tokens.length === 2 && tokens[0] && tokens[1]) {
+                map[tokens[0]] = tokens[1];
+            }
+        }
+    }
+    return map;
+}
+
+function tryGetContent(...paths: string[]): string | undefined {
+    let file = path.join(...paths);
+    let stat = fs.lstatSync(file);
+    if (fs.existsSync(file)) {
+        if (stat.isSymbolicLink())
+            return tryGetContent(fs.realpathSync(file));
+        else if (stat.isFile())
+            return fs.readFileSync(file).toString().trim();
     }
 }
 
@@ -80,19 +90,19 @@ export interface Configuration {
     auth: {
         /** The used authentication provider. */
         provider: string;
-        /** The ACL (access control list) that maps users to Kubernetes service accounts. Default is `kube-system/dashboard-admin`. */
+        /** The ACL (access control list) that maps users to Kubernetes service accounts. Default is `kube-system/kubernetes-dashboard`. */
         acl: {
-            /** The service account used when no entry in `users` or `groups` matches the authenticated user. Default is `kube-system/dashboard-admin`. Unset this value to whitelist authorized users. */
+            /** The service account used when no entry in `users` or `groups` matches the authenticated user. Default is `kube-system/kubernetes-dashboard`. Unset this value to whitelist authorized users. */
             fallback: string | undefined,
             /** Key-value-pairs mapping user names to Kubernetes service accounts. */
             users: {
                 [name: string]: string
-            } | undefined,
+            },
             /** Key-value-pairs mapping user group names to Kubernetes service accounts. The `auth.provider` implementations define what is considered a group. */
             groups: {
                 [name: string]: string
-            } | undefined
-        } | string,
+            }
+        },
         /** Configuration used in conunction with provider `ldap`. */
         ldap: {
             /** The LDAP server address. */
@@ -133,7 +143,6 @@ const defaults = {
         }
     },
     auth: {
-        acl: "dashboard-admin",
         ldap: {
             userAttribute: "sAMAccountName"
         }
@@ -144,11 +153,11 @@ const providedValues = {
     upstream: process.env.CONFIG_UPSTREAM,
     api: {
         server: apiServerAddress(),
-        token: tokenFromAutomount()
+        token: tryGetContent(__root, "run", "secrets", "kubernetes.io", "serviceaccount", "token")
     },
     tls: {
-        cert: process.env.CONFIG_TLS_CERT && decode(process.env.CONFIG_TLS_CERT),
-        key: process.env.CONFIG_TLS_KEY && decode(process.env.CONFIG_TLS_KEY)
+        cert: encode(tryGetContent(__dirname, "cert", "proxy.crt")),
+        key: encode(tryGetContent(__dirname, "cert", "proxy.key")),
     },
     host: {
         port: {
@@ -158,7 +167,11 @@ const providedValues = {
     },
     auth: {
         provider: process.env.CONFIG_AUTH_PROVIDER,
-        acl: tryDeserialize(process.env.CONFIG_AUTH_ACL),
+        acl: {
+            fallback: tryGetContent(__dirname, "acl", "fallback"),
+            users: toKeyValuePairs(tryGetContent(__dirname, "acl", "users")),
+            groups: toKeyValuePairs(tryGetContent(__dirname, "acl", "groups"))
+        },
         ldap: {
             server: process.env.CONFIG_AUTH_LDAP_SERVER,
             bindUser: process.env.CONFIG_AUTH_LDAP_BIND_USER,

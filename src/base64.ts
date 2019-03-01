@@ -3,7 +3,7 @@
  * @param s Raw string.
  * @returns Base64 encoded string.
  */
-export function encode(s: string): string {
+export function encode(s: string | undefined): string | undefined {
     return s && Buffer.from(s).toString("base64");
 }
 
@@ -12,6 +12,6 @@ export function encode(s: string): string {
  * @param s Base64 encoded string.
  * @returns Raw string.
  */
-export function decode(s: string): string {
+export function decode(s: string | undefined): string | undefined {
     return s && Buffer.from(s, "base64").toString();
 }

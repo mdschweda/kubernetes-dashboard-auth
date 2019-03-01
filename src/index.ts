@@ -10,12 +10,14 @@ import upgradeHttp from "./middleware/upgrade-http";
 import * as authentication from "./middleware/authentication";
 import proxy from "./middleware/reverse-proxy";
 
+import "./debug";
+
 const app = express()
     // logging
     .use(morgan("combined"))
     // sessions (cookie authentication)
     .use(session)
-    // htpp -> https
+    // http -> https
     .all("*", upgradeHttp)
     // Terminating sessions
     .get("/logout", authentication.logout)

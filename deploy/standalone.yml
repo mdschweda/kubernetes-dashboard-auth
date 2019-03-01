@@ -1,125 +1,126 @@
 apiVersion: apps/v1beta1
 kind: Deployment
-metadata:
-  name: dashboard-auth-proxy
+metadata: &deployment_metadata
+  name: kubernetes-dashboard-proxy
   namespace: kube-system
   labels:
-    app.kubernetes.io/name: dashboard-auth-proxy
+    app.kubernetes.io/name: kubernetes-dashboard-proxy
     app.kubernetes.io/part-of: dashboard
 spec:
   # The application is not yet designed for multiple instances
   replicas: 1
   template:
-    metadata:
-      name: dashboard-auth-proxy
-      namespace: kube-system
-      labels:
-        app.kubernetes.io/name: dashboard-auth-proxy
-        app.kubernetes.io/part-of: dashboard
+    metadata: *deployment_metadata
     spec:
       containers:
-      - name: dashboard-auth-proxy
+      - name: kubernetes-dashboard-proxy
+        imagePullPolicy: Never # TEMP! TODO
         image: mdschweda/kubernetes-dashboard-auth
+        # command:
+        #   - sleep
+        # args:
+        #   - 9h
         env:
           - name: CONFIG_UPSTREAM
             valueFrom:
               configMapKeyRef:
-                name: dashboard-auth-config
+                name: kubernetes-dashboard-proxy-config
                 key: upstream
                 optional: true
-          - name: CONFIG_TLS_CERT
-            valueFrom:
-              configMapKeyRef:
-                name: dashboard-auth-config
-                key: tls.cert
-          - name: CONFIG_TLS_KEY
-            valueFrom:
-              secretKeyRef:
-                name: dashboard-auth-secret
-                key: tls.key
           - name: CONFIG_HOST_PORT_HTTP
             valueFrom:
               configMapKeyRef:
-                name: dashboard-auth-config
+                name: kubernetes-dashboard-proxy-config
                 key: host.port.http
                 optional: true
           - name: CONFIG_HOST_PORT_HTTPS
             valueFrom:
               configMapKeyRef:
-                name: dashboard-auth-config
+                name: kubernetes-dashboard-proxy-config
                 key: host.port.https
                 optional: true
           - name: CONFIG_AUTH_PROVIDER
             valueFrom:
               configMapKeyRef:
-                name: dashboard-auth-config
+                name: kubernetes-dashboard-proxy-config
                 key: auth.provider
           - name: CONFIG_AUTH_LDAP_SERVER
             valueFrom:
               configMapKeyRef:
-                name: dashboard-auth-config
+                name: kubernetes-dashboard-proxy-config
                 key: auth.ldap.server
                 optional: true
           - name: CONFIG_AUTH_LDAP_BIND_USER
             valueFrom:
               configMapKeyRef:
-                name: dashboard-auth-config
+                name: kubernetes-dashboard-proxy-config
                 key: auth.ldap.bindUser
                 optional: true
           - name: CONFIG_AUTH_LDAP_BIND_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: dashboard-auth-secret
+                name: kubernetes-dashboard-proxy-secret
                 key: auth.ldap.bindPassword
                 optional: true
           - name: CONFIG_AUTH_LDAP_BASE_DN
             valueFrom:
               configMapKeyRef:
-                name: dashboard-auth-config
+                name: kubernetes-dashboard-proxy-config
                 key: auth.ldap.baseDN
                 optional: true
           - name: CONFIG_AUTH_LDAP_USER_ATTRIBUTE
             valueFrom:
               configMapKeyRef:
-                name: dashboard-auth-config
+                name: kubernetes-dashboard-proxy-config
                 key: auth.ldap.userAttribute
                 optional: true
           - name: CONFIG_AUTH_GITHUB_ORGANIZATION
             valueFrom:
               configMapKeyRef:
-                name: dashboard-auth-config
+                name: kubernetes-dashboard-proxy-config
                 key: auth.github.organization
                 optional: true
           - name: CONFIG_AUTH_AZUREAD_TENANT
             valueFrom:
               configMapKeyRef:
-                name: dashboard-auth-config
+                name: kubernetes-dashboard-proxy-config
                 key: auth.azuread.tenant
                 optional: true
           - name: CONFIG_AUTH_AZUREAD_CLIENT_ID
             valueFrom:
               configMapKeyRef:
-                name: dashboard-auth-config
+                name: kubernetes-dashboard-proxy-config
                 key: auth.azuread.client.id
                 optional: true
           - name: CONFIG_AUTH_AZUREAD_CLIENT_SECRET
             valueFrom:
               secretKeyRef:
-                name: dashboard-auth-secret
+                name: kubernetes-dashboard-proxy-secret
                 key: auth.azuread.client.secret
                 optional: true
         volumeMounts:
+          - name: cert
+            mountPath: /app/cert
           - name: acl
             mountPath: /app/acl
-      serviceAccountName: dashboard-auth-proxy
+      serviceAccountName: kubernetes-dashboard-proxy
       automountServiceAccountToken: true
       volumes:
+        - name: cert
+          secret:
+            secretName: kubernetes-dashboard-certs
+            items:
+              - key: dashboard.crt
+                path: proxy.crt
+              - key: dashboard.key
+                path: proxy.key
         - name: acl
           configMap:
-            name: dashboard-auth-acl
+            optional: true
+            name: kubernetes-dashboard-acl
             items:
-              - key: default
-                path: default
+              - key: fallback
+                path: fallback
               - key: users
                 path: users
               - key: groups

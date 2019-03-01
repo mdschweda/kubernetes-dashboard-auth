@@ -1,4 +1,3 @@
-import { encode } from "../base64";
 import session from "express-session";
 import config from "../config";
 
@@ -9,7 +8,7 @@ import config from "../config";
  * @param next The next middleware in the pipeline.
  */
 export default session({
-    secret: encode(config.tls.key),
+    secret: config.tls.key,
     resave: false,
     saveUninitialized: true,
     cookie: { secure: true }

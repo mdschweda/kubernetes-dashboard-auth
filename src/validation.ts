@@ -31,12 +31,15 @@ export default async function validate(config: Configuration) : Promise<string[]
             )
         );
 
-    !(config.tls.cert && config.tls.key) && errors.push("Certificate improperly configured.");
+    !(config.tls.cert && config.tls.key) && errors.push(
+        "No certificate and/or key specified. " + (isDevel ?
+            "Configure tls.cert and tls.key inside development.config.json" :
+            "Follow the steps on https://github.com/kubernetes/dashboard/wiki/Installation to configure the dashboard certificate."
+        )
+    );
+
     !config.auth.provider && errors.push("No authentication provider specified.")
-    if (typeof config.auth.acl === "string")
-        !config.auth.acl && errors.push("No default service account specified.");
-    else if (typeof config.auth.acl === "object")
-        !(config.auth.acl.fallback || config.auth.acl.users || config.auth.acl.groups) && errors.push("The access control list is empty.");
+    !(config.auth.acl.fallback || config.auth.acl.users || config.auth.acl.groups) && errors.push("The access control list is empty.");
     
     try {
         let upstream = url.parse(config.upstream);

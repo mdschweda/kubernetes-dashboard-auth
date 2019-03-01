@@ -14,6 +14,10 @@
     "dashboard",
     "proxy"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mdschweda/kubernetes-dashboard-auth"
+  },
   "author": "ms@gschwind-software.de",
   "license": "MIT",
   "dependencies": {

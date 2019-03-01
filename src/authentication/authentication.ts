@@ -70,19 +70,15 @@ export class Authentication {
         if (this.error || !this.username)
             return;
 
-        if (typeof config.auth.acl === "string")
-            return new ServiceAccount(config.auth.acl);
-        else if (config.auth.acl) {
-            if (config.auth.acl.users && Object.keys(config.auth.acl.users).includes(this.username))
-                return new ServiceAccount(config.auth.acl.users[this.username]);
-            else if (config.auth.acl.groups) {
-                let group = Object.keys(config.auth.acl.groups).find(g => this.groups.includes(g));
-                if (group)
-                    return new ServiceAccount(config.auth.acl.groups[group]);
-            }
-                
-            return config.auth.acl.fallback && new ServiceAccount(config.auth.acl.fallback) || undefined;
+        if (config.auth.acl.users && Object.keys(config.auth.acl.users).includes(this.username))
+            return new ServiceAccount(config.auth.acl.users[this.username]);
+        else if (config.auth.acl.groups) {
+            let group = Object.keys(config.auth.acl.groups).find(g => this.groups.includes(g));
+            if (group)
+                return new ServiceAccount(config.auth.acl.groups[group]);
         }
+            
+        return config.auth.acl.fallback && new ServiceAccount(config.auth.acl.fallback) || undefined;
     }
 
 }

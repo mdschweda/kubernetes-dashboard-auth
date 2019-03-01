@@ -34,7 +34,7 @@
         "args": [
             "build",
             "-t",
-            "mdschweda/k8s-dashboard-auth",
+            "mdschweda/kubernetes-dashboard-auth",
             "."
         ],
         "options": {

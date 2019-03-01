@@ -1,21 +1,16 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: dashboard-auth-config
+  name: kubernetes-dashboard-proxy-config
   namespace: kube-system
   labels:
-    app.kubernetes.io/name: dashboard-auth-config
+    app.kubernetes.io/name: kubernetes-dashboard-proxy-config
     app.kubernetes.io/part-of: dashboard
 data:
   # Dashboard
   #------------------------------------------------------------------------------------------------
   # The url of the dashboard. Default is "https://kubernetes-dashboard.kube-system.svc.cluster.local:8443/".
   # upstream: "https://url-from-within-the-cluster:123456/"
-
-  # TLS
-  #------------------------------------------------------------------------------------------------
-  # [REQUIRED] The server certificate.
-  tls.cert: "base64 encoded pem file"
 
   # Server ports
   #------------------------------------------------------------------------------------------------
@@ -57,16 +52,13 @@ data:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: dashboard-auth-secret
+  name: kubernetes-dashboard-proxy-secret
   namespace: kube-system
   labels:
-    app.kubernetes.io/name: dashboard-auth-secret
+    app.kubernetes.io/name: kubernetes-dashboard-proxy-secret
     app.kubernetes.io/part-of: dashboard
-data:
-  # TLS
-  #------------------------------------------------------------------------------------------------
-  # [REQUIRED] The private key of the server.
-  tls.key: "base64 encoded pem file"
+stringData:
+  foo: bar
 
   # When using authentication provider "ldap"...
   #------------------------------------------------------------------------------------------------
