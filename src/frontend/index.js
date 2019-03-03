@@ -82,7 +82,7 @@ async function onSignIn() {
         } else
             throw `Unexpected response: ${result.status}`
     } catch {
-        setStatus("Can't login right now. Contact the administrator if this problem persists.", true)
+        setStatus("Cannot login right now. Contact the administrator if this problem persists.", true)
     }
 }
 

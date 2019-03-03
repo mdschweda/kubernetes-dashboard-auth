@@ -2,7 +2,8 @@ import fs from "fs";
 import path from "path";
 import { merge } from "lodash";
 import validate from "./validation";
-import { encode } from "./base64";
+import { encode as toBase64 } from "./base64";
+import createSelfSignedCertificate from "./cert";
 
 const __root = path.parse(__dirname).root;
 
@@ -48,12 +49,12 @@ function toKeyValuePairs(s: string | undefined) {
     return map;
 }
 
-function tryGetContent(...paths: string[]): string | undefined {
+function fromFile(...paths: string[]): string | undefined {
     let file = path.join(...paths);
-    let stat = fs.lstatSync(file);
     if (fs.existsSync(file)) {
+        let stat = fs.lstatSync(file);
         if (stat.isSymbolicLink())
-            return tryGetContent(fs.realpathSync(file));
+            return fromFile(fs.realpathSync(file));
         else if (stat.isFile())
             return fs.readFileSync(file).toString().trim();
     }
@@ -76,15 +77,8 @@ export interface Configuration {
         cert: string;
         /** The private key of the server. */
         key: string;
-    },
-    host: {
-        /** The server ports. */
-        port: {
-            /** The HTTP port. Default is `80`. */
-            http: number;
-            /** The HTTPS port. Default is `443`. */
-            https: number;
-        }
+        /** Value indicating whether the certificate was created during startup. */
+        generated: boolean;
     },
     /** The authentication and authorization configuration. */
     auth: {
@@ -136,12 +130,6 @@ export interface Configuration {
 
 const defaults = {
     upstream: "https://kubernetes-dashboard.kube-system.svc.cluster.local:8443/",
-    host: {
-        port: {
-            http: 80,
-            https: 443
-        }
-    },
     auth: {
         ldap: {
             userAttribute: "sAMAccountName"
@@ -153,24 +141,18 @@ const providedValues = {
     upstream: process.env.CONFIG_UPSTREAM,
     api: {
         server: apiServerAddress(),
-        token: tryGetContent(__root, "run", "secrets", "kubernetes.io", "serviceaccount", "token")
+        token: fromFile(__root, "run", "secrets", "kubernetes.io", "serviceaccount", "token")
     },
     tls: {
-        cert: encode(tryGetContent(__dirname, "cert", "proxy.crt")),
-        key: encode(tryGetContent(__dirname, "cert", "proxy.key")),
-    },
-    host: {
-        port: {
-            http: process.env.CONFIG_HOST_PORT_HTTP && Number.parseInt(process.env.CONFIG_HOST_PORT_HTTP),
-            https: process.env.CONFIG_HOST_PORT_HTTPS && Number.parseInt(process.env.CONFIG_HOST_PORT_HTTPS)
-        }
+        cert: toBase64(fromFile(__dirname, "cert", "proxy.crt")),
+        key: toBase64(fromFile(__dirname, "cert", "proxy.key")),
     },
     auth: {
         provider: process.env.CONFIG_AUTH_PROVIDER,
         acl: {
-            fallback: tryGetContent(__dirname, "acl", "fallback"),
-            users: toKeyValuePairs(tryGetContent(__dirname, "acl", "users")),
-            groups: toKeyValuePairs(tryGetContent(__dirname, "acl", "groups"))
+            fallback: fromFile(__dirname, "acl", "fallback"),
+            users: toKeyValuePairs(fromFile(__dirname, "acl", "users")),
+            groups: toKeyValuePairs(fromFile(__dirname, "acl", "groups"))
         },
         ldap: {
             server: process.env.CONFIG_AUTH_LDAP_SERVER,
@@ -193,6 +175,13 @@ const providedValues = {
 };
 
 const config = merge(merge(defaults, devel()), providedValues) as Configuration;
+
+if (!config.tls.cert || !config.tls.key) {
+    let selfSignedCert = createSelfSignedCertificate();
+    config.tls.cert = toBase64(selfSignedCert.cert)!;
+    config.tls.key = toBase64(selfSignedCert.key)!;
+    config.tls.generated = true;
+}
 
 validate(config).then(errors => {
     if (errors.length) {

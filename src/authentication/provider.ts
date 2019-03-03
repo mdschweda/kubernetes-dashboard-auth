@@ -40,7 +40,7 @@ export class AuthenticationProviderFactory {
     private static async initialize() {
         let providers = new Map<string, () => IAuthenticationProvider>();
 
-        for (var file of await fs.readdir(join(__dirname, "providers"))) {
+        for (let file of await fs.readdir(join(__dirname, "providers"))) {
             let ext = extname(file);
             if (ext === ".js" || ext === ".ts") {
                 try {

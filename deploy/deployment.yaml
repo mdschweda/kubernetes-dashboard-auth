@@ -1,3 +1,60 @@
+# Authentication proxy service account
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubernetes-dashboard-proxy
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: kubernetes-dashboard-proxy
+    app.kubernetes.io/part-of: dashboard
+automountServiceAccountToken: true
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubernetes-dashboard-authenticator
+  labels:
+    app.kubernetes.io/name: kubernetes-dashboard-authenticator
+    app.kubernetes.io/part-of: dashboard
+rules:
+  # List and read service accounts
+  - resources:
+    - serviceaccounts
+    verbs:
+    - get
+    - list
+    apiGroups:
+      - ""
+  # Get tokens for impersonation
+  - resources:
+    - secrets
+    verbs:
+      - get
+    apiGroups:
+      - ""
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubernetes-dashboard-proxy
+  labels:
+    app.kubernetes.io/name: kubernetes-dashboard-proxy
+    app.kubernetes.io/part-of: dashboard
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kubernetes-dashboard-authenticator
+subjects:
+  - kind: ServiceAccount
+    name: kubernetes-dashboard-proxy
+    namespace: kube-system
+
+---
+
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata: &deployment_metadata
@@ -26,18 +83,6 @@ spec:
               configMapKeyRef:
                 name: kubernetes-dashboard-proxy-config
                 key: upstream
-                optional: true
-          - name: CONFIG_HOST_PORT_HTTP
-            valueFrom:
-              configMapKeyRef:
-                name: kubernetes-dashboard-proxy-config
-                key: host.port.http
-                optional: true
-          - name: CONFIG_HOST_PORT_HTTPS
-            valueFrom:
-              configMapKeyRef:
-                name: kubernetes-dashboard-proxy-config
-                key: host.port.https
                 optional: true
           - name: CONFIG_AUTH_PROVIDER
             valueFrom:
@@ -109,6 +154,7 @@ spec:
         - name: cert
           secret:
             secretName: kubernetes-dashboard-certs
+            optional: true
             items:
               - key: dashboard.crt
                 path: proxy.crt
@@ -116,8 +162,8 @@ spec:
                 path: proxy.key
         - name: acl
           configMap:
-            optional: true
             name: kubernetes-dashboard-acl
+            optional: true
             items:
               - key: fallback
                 path: fallback

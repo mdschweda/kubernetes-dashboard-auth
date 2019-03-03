@@ -12,13 +12,6 @@ data:
   # The url of the dashboard. Default is "https://kubernetes-dashboard.kube-system.svc.cluster.local:8443/".
   # upstream: "https://url-from-within-the-cluster:123456/"
 
-  # Server ports
-  #------------------------------------------------------------------------------------------------
-  # The HTTP port. Default is "80".
-  # host.port.http: "123"
-  # The HTTPS port. Default is "443".
-  # host.port.https: "456"
-
   # Authentication
   #------------------------------------------------------------------------------------------------
   # [REQUIRED] The used authentication provider.

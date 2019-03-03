@@ -16,7 +16,7 @@ export default async function (res: Response, ...paths: string[]): Promise<boole
 
     try {
         let reqFile = join(...paths);
-        var stat = await fs.lstat(reqFile);
+        let stat = await fs.lstat(reqFile);
         if (!stat.isFile())
             throw "Not a file";
 

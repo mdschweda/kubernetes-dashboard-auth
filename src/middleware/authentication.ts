@@ -30,9 +30,9 @@ export function logout(req: Request, res: Response) {
  * @param res The response object.
  */
 export async function login(req: Request, res: Response) {
-    var user = req.body && req.body.user as string || undefined;
-    var pwd = req.body && req.body.pwd as string || undefined;
-    var otp = req.body && req.body.otp as string || undefined;
+    let user = req.body && req.body.user as string || undefined;
+    let pwd = req.body && req.body.pwd as string || undefined;
+    let otp = req.body && req.body.otp as string || undefined;
 
     if (!(user && pwd))
         return res.sendStatus(status.BAD_REQUEST);

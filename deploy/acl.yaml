@@ -11,12 +11,12 @@ data:
 
   # Map specific users
   users: |
-    user1=namespace/serviceaccount
-    user2=mynamespace/default
+    # user1=namespace/serviceaccount
+    # user2=serviceaccount-in-default-namespace
 
   # Map user groups (defined by the configured authentication provider)
   groups: |
-    administrators=kube-system/cluster-admin
+    # administrators=kube-system/some-admin-account
 
   # The service account used when no entry in "users" or "groups" matches the authenticated user.
   # Unset this value to explicitly whitelist authorized users
