@@ -1,6 +1,6 @@
 import ldap from "ldapjs";
 import { IAuthenticationProvider } from "../provider";
-import config from "../../config";
+import { default as config, ConfigurationAudit } from "../../config";
 import { Authentication, AuthenticationError } from "../authentication";
 
 /**
@@ -81,8 +81,11 @@ export default class LDAPValidationProvider implements IAuthenticationProvider  
     }
 
     /** @inheritdoc */
-    get configurationErrors(): string[] {
-        return [];
+    validateConfiguration(): ConfigurationAudit {
+        return {
+            errors: [],
+            warnings: []
+        };
     }
 
     /** @inheritdoc */

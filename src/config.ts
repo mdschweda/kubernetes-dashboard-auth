@@ -1,9 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { merge } from "lodash";
-import validate from "./validation";
 import { encode as toBase64 } from "./base64";
-import createSelfSignedCertificate from "./cert";
 
 const __root = path.parse(__dirname).root;
 
@@ -77,12 +75,10 @@ export interface Configuration {
         cert: string;
         /** The private key of the server. */
         key: string;
-        /** Value indicating whether the certificate was created during startup. */
-        generated: boolean;
     },
     /** The authentication and authorization configuration. */
     auth: {
-        /** The used authentication provider. */
+        /** The authentication provider used to validate user accounts. */
         provider: string;
         /** The ACL (access control list) that maps users to Kubernetes service accounts. Default is `kube-system/kubernetes-dashboard`. */
         acl: {
@@ -129,7 +125,7 @@ export interface Configuration {
 }
 
 const defaults = {
-    upstream: "https://kubernetes-dashboard.kube-system.svc.cluster.local:8443/",
+    upstream: "https://kubernetes-dashboard.kube-system.svc.cluster.local/",
     auth: {
         ldap: {
             userAttribute: "sAMAccountName"
@@ -144,8 +140,8 @@ const providedValues = {
         token: fromFile(__root, "run", "secrets", "kubernetes.io", "serviceaccount", "token")
     },
     tls: {
-        cert: toBase64(fromFile(__dirname, "cert", "proxy.crt")),
-        key: toBase64(fromFile(__dirname, "cert", "proxy.key")),
+        cert: toBase64(fromFile(__dirname, "cert", "server.crt")),
+        key: toBase64(fromFile(__dirname, "cert", "server.key")),
     },
     auth: {
         provider: process.env.CONFIG_AUTH_PROVIDER,
@@ -174,25 +170,14 @@ const providedValues = {
     }
 };
 
-const config = merge(merge(defaults, devel()), providedValues) as Configuration;
-
-if (!config.tls.cert || !config.tls.key) {
-    let selfSignedCert = createSelfSignedCertificate();
-    config.tls.cert = toBase64(selfSignedCert.cert)!;
-    config.tls.key = toBase64(selfSignedCert.key)!;
-    config.tls.generated = true;
+/** The result of a configuration validation / sanitization. */
+export interface ConfigurationAudit {
+    /** Critical configuration errors. */
+    errors: string[],
+    /** Non-critical configuration errors. */
+    warnings: string[]
 }
 
-validate(config).then(errors => {
-    if (errors.length) {
-        console.error("⛔\0 Please, revise your configuration:")
-    
-        for (let e of errors)
-            console.error(`• ${e}`);
-    
-        console.error("See https://github.com/mdschweda/kubernetes-dashboard-auth for details.");
-        process.exit(1);
-    }
-});
+const config = merge(merge(defaults, devel()), providedValues) as Configuration;
 
 export default config;

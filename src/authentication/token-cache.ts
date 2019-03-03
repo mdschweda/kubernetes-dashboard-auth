@@ -2,6 +2,7 @@ import axios, { AxiosRequestConfig } from "axios";
 import { Agent } from "https";
 import status from "http-status-codes";
 import config from "../config";
+import { decode } from "../base64";
 import { ServiceAccount, ServiceAccountList, TokenSecret } from "./service-account";
 
 /**
@@ -44,7 +45,7 @@ export default class TokenCache {
                     if (resp.status === status.OK) {
                         let token = (resp.data as TokenSecret).data.token;
                         if (token) {
-                            this._cache.set(sa.fqn, token);
+                            this._cache.set(sa.fqn, decode(token)!);
                             return token;
                         }
                     }

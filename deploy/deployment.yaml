@@ -2,10 +2,10 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: kubernetes-dashboard-proxy
+  name: kubernetes-dashboard-auth
   namespace: kube-system
   labels:
-    app.kubernetes.io/name: kubernetes-dashboard-proxy
+    app.kubernetes.io/name: kubernetes-dashboard-auth
     app.kubernetes.io/part-of: dashboard
 automountServiceAccountToken: true
 
@@ -40,9 +40,9 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: kubernetes-dashboard-proxy
+  name: kubernetes-dashboard-auth
   labels:
-    app.kubernetes.io/name: kubernetes-dashboard-proxy
+    app.kubernetes.io/name: kubernetes-dashboard-auth
     app.kubernetes.io/part-of: dashboard
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -50,7 +50,7 @@ roleRef:
   name: kubernetes-dashboard-authenticator
 subjects:
   - kind: ServiceAccount
-    name: kubernetes-dashboard-proxy
+    name: kubernetes-dashboard-auth
     namespace: kube-system
 
 ---
@@ -58,10 +58,10 @@ subjects:
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata: &deployment_metadata
-  name: kubernetes-dashboard-proxy
+  name: kubernetes-dashboard-auth
   namespace: kube-system
   labels:
-    app.kubernetes.io/name: kubernetes-dashboard-proxy
+    app.kubernetes.io/name: kubernetes-dashboard-auth
     app.kubernetes.io/part-of: dashboard
 spec:
   # The application is not yet designed for multiple instances
@@ -70,77 +70,74 @@ spec:
     metadata: *deployment_metadata
     spec:
       containers:
-      - name: kubernetes-dashboard-proxy
-        imagePullPolicy: Never # TEMP! TODO
+      - name: kubernetes-dashboard-auth
         image: mdschweda/kubernetes-dashboard-auth
-        # command:
-        #   - sleep
-        # args:
-        #   - 9h
+        ports:
+          - containerPort: 443
         env:
           - name: CONFIG_UPSTREAM
             valueFrom:
               configMapKeyRef:
-                name: kubernetes-dashboard-proxy-config
+                name: kubernetes-dashboard-auth-config
                 key: upstream
                 optional: true
           - name: CONFIG_AUTH_PROVIDER
             valueFrom:
               configMapKeyRef:
-                name: kubernetes-dashboard-proxy-config
+                name: kubernetes-dashboard-auth-config
                 key: auth.provider
           - name: CONFIG_AUTH_LDAP_SERVER
             valueFrom:
               configMapKeyRef:
-                name: kubernetes-dashboard-proxy-config
+                name: kubernetes-dashboard-auth-config
                 key: auth.ldap.server
                 optional: true
           - name: CONFIG_AUTH_LDAP_BIND_USER
             valueFrom:
               configMapKeyRef:
-                name: kubernetes-dashboard-proxy-config
+                name: kubernetes-dashboard-auth-config
                 key: auth.ldap.bindUser
                 optional: true
           - name: CONFIG_AUTH_LDAP_BIND_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: kubernetes-dashboard-proxy-secret
+                name: kubernetes-dashboard-auth-secret
                 key: auth.ldap.bindPassword
                 optional: true
           - name: CONFIG_AUTH_LDAP_BASE_DN
             valueFrom:
               configMapKeyRef:
-                name: kubernetes-dashboard-proxy-config
+                name: kubernetes-dashboard-auth-config
                 key: auth.ldap.baseDN
                 optional: true
           - name: CONFIG_AUTH_LDAP_USER_ATTRIBUTE
             valueFrom:
               configMapKeyRef:
-                name: kubernetes-dashboard-proxy-config
+                name: kubernetes-dashboard-auth-config
                 key: auth.ldap.userAttribute
                 optional: true
           - name: CONFIG_AUTH_GITHUB_ORGANIZATION
             valueFrom:
               configMapKeyRef:
-                name: kubernetes-dashboard-proxy-config
+                name: kubernetes-dashboard-auth-config
                 key: auth.github.organization
                 optional: true
           - name: CONFIG_AUTH_AZUREAD_TENANT
             valueFrom:
               configMapKeyRef:
-                name: kubernetes-dashboard-proxy-config
+                name: kubernetes-dashboard-auth-config
                 key: auth.azuread.tenant
                 optional: true
           - name: CONFIG_AUTH_AZUREAD_CLIENT_ID
             valueFrom:
               configMapKeyRef:
-                name: kubernetes-dashboard-proxy-config
+                name: kubernetes-dashboard-auth-config
                 key: auth.azuread.client.id
                 optional: true
           - name: CONFIG_AUTH_AZUREAD_CLIENT_SECRET
             valueFrom:
               secretKeyRef:
-                name: kubernetes-dashboard-proxy-secret
+                name: kubernetes-dashboard-auth-secret
                 key: auth.azuread.client.secret
                 optional: true
         volumeMounts:
@@ -148,7 +145,7 @@ spec:
             mountPath: /app/cert
           - name: acl
             mountPath: /app/acl
-      serviceAccountName: kubernetes-dashboard-proxy
+      serviceAccountName: kubernetes-dashboard-auth
       automountServiceAccountToken: true
       volumes:
         - name: cert
@@ -157,9 +154,9 @@ spec:
             optional: true
             items:
               - key: dashboard.crt
-                path: proxy.crt
+                path: server.crt
               - key: dashboard.key
-                path: proxy.key
+                path: server.key
         - name: acl
           configMap:
             name: kubernetes-dashboard-acl
@@ -171,3 +168,21 @@ spec:
                 path: users
               - key: groups
                 path: groups
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubernetes-dashboard-auth
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: kubernetes-dashboard-auth
+    app.kubernetes.io/part-of: dashboard
+spec:
+  selector:    
+    app.kubernetes.io/name: kubernetes-dashboard-auth
+  ports:
+    - name: http
+      port: 443
+  type: ClusterIP

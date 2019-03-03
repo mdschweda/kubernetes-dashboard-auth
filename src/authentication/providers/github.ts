@@ -1,6 +1,6 @@
 import axios from "axios";
 import status from "http-status-codes";
-import config from "../../config";
+import { default as config, ConfigurationAudit } from "../../config";
 import { IAuthenticationProvider } from "../provider";
 import { Authentication, AuthenticationError } from "../authentication";
 
@@ -35,10 +35,15 @@ export default class GitHubValidationProvider implements IAuthenticationProvider
     }
 
     /** @inheritdoc */
-    get configurationErrors(): string[] {
-        let errors: string[] = [];
-        !config.auth.github.organization && errors.push("No GitHub organization provided.");
-        return errors;
+    validateConfiguration(): ConfigurationAudit {
+        let result: ConfigurationAudit = {
+            errors: [],
+            warnings: []
+        };
+
+        !config.auth.github.organization && result.errors.push("No GitHub organization provided.");
+        
+        return result;
     }
     
     /** @inheritdoc */

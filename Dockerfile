@@ -13,9 +13,8 @@ RUN npx tsc && npm run build-frontend
 
 FROM node:10
 
+EXPOSE 443
+CMD [ "node", "/app/index.js" ]
+
 WORKDIR /app
 COPY --from=build-stage /app/dist .
-
-EXPOSE 443
-
-CMD [ "node", "/app/index.js" ]

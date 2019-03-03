@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import { extname, join } from "path";
 import { Authentication } from "./authentication";
+import { ConfigurationAudit } from "../config";
 
 /**
  * Provides methods for validating user credentials.
@@ -15,7 +16,7 @@ export interface IAuthenticationProvider {
     /**
      * Gets all provider configuration errors.
      */
-    readonly configurationErrors: string[];
+    validateConfiguration(): ConfigurationAudit;
 
     /**
      * 

@@ -7,7 +7,7 @@
     "settings": {
         "typescript.suggestionActions.enabled": false,
         "yaml.schemas": {
-            "Kubernetes": "deploy/*.yml"
+            "Kubernetes": "deploy/*.yaml"
         }
     }
 }

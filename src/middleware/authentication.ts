@@ -84,7 +84,7 @@ export async function guard(req: Request, res: Response, next: NextFunction) {
     if (!(req.session && req.session.token))
         await sendStatic(res, req.path);
     else {
-        req.headers.authorization = `Bearer ${req.session.token}`
+        req.headers.authorization = `Bearer ${req.session.token}`;
         next();
     }
 }

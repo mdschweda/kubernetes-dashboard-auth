@@ -1,4 +1,5 @@
 import { IAuthenticationProvider } from "../provider";
+import { ConfigurationAudit } from "../../config";
 import { Authentication, AuthenticationError } from "../authentication";
 
 /**
@@ -19,8 +20,11 @@ export default class TestValidationProvider implements IAuthenticationProvider  
     }
 
     /** @inheritdoc */
-    get configurationErrors(): string[] {
-        return [];
+    validateConfiguration(): ConfigurationAudit {
+        return {
+            errors: [],
+            warnings: []
+        };
     }
 
     /** @inheritdoc */

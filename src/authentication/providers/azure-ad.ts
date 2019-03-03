@@ -1,7 +1,7 @@
 import axios from "axios";
 import status from "http-status-codes";
 import { stringify as urlencoded } from "querystring";
-import config from "../../config";
+import { default as config, ConfigurationAudit } from "../../config";
 import { IAuthenticationProvider } from "../provider";
 import { Authentication, AuthenticationError } from "../authentication";
 
@@ -16,12 +16,17 @@ export default class AzureADValidationProvider implements IAuthenticationProvide
     }
 
     /** @inheritdoc */
-    get configurationErrors(): string[] {
-        let errors: string[] = [];
-        !config.auth.azuread.tenant && errors.push("No Azure AD tenant / directory provided.");
-        !config.auth.azuread.client.id && errors.push("No client id of the Azure AD application provided.");
-        !config.auth.azuread.client.secret && errors.push("No client secret of the Azure AD application provided.");
-        return errors;
+    validateConfiguration(): ConfigurationAudit {
+        let result: ConfigurationAudit = {
+            errors: [],
+            warnings: []
+        };
+
+        !config.auth.azuread.tenant && result.errors.push("No Azure AD tenant / directory provided.");
+        !config.auth.azuread.client.id && result.errors.push("No client id of the Azure AD application provided.");
+        !config.auth.azuread.client.secret && result.errors.push("No client secret of the Azure AD application provided.");
+        
+        return result;
     }
 
     /** @inheritdoc */

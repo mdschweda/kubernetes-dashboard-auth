@@ -72,8 +72,9 @@ async function onSignIn() {
                 if (result.content === AuthenticationError.badOtp)
                     setStatus("The security code is invalid.", true);
                 else {
-                    dom.removeClass(dom.id("otp").parentNode, "hidden");
                     setStatus("Enter the verification code generated on your device or in your app.");
+                    dom.removeClass(dom.id("otp").parentNode, "hidden");
+                    dom.id("otp").focus();
                 }
             } else
                 setStatus("The provided credentials are invalid.", true);
