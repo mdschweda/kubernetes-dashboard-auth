@@ -16,7 +16,7 @@ data:
 
   # Map user groups (defined by the configured authentication provider)
   groups: |
-    # administrators=kube-system/some-admin-account
+    # administrators=kube-system/admin
 
   # The service account used when no entry in "users" or "groups" matches the authenticated user.
   # Unset this value to explicitly whitelist authorized users

@@ -74,6 +74,7 @@ spec:
         image: mdschweda/kubernetes-dashboard-auth
         ports:
           - containerPort: 443
+        # See config.yaml
         env:
           - name: CONFIG_UPSTREAM
             valueFrom:
@@ -148,6 +149,7 @@ spec:
       serviceAccountName: kubernetes-dashboard-auth
       automountServiceAccountToken: true
       volumes:
+        # See https://github.com/kubernetes/dashboard/wiki/Installation#recommended-setup
         - name: cert
           secret:
             secretName: kubernetes-dashboard-certs
@@ -157,6 +159,7 @@ spec:
                 path: server.crt
               - key: dashboard.key
                 path: server.key
+        # See acl.yaml
         - name: acl
           configMap:
             name: kubernetes-dashboard-acl
