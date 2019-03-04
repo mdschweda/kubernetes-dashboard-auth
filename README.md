@@ -1,6 +1,8 @@
 # Kubernetes Dashboard Authentication Proxy
 
-An authentication proxy for the [Kubernetes dashboard](https://github.com/kubernetes/dashboard) that allows you to sign in with individual user accounts.
+![GitHub package.json version](https://img.shields.io/github/package-json/v/mdschweda/kubernetes-dashboard-auth.svg) ![GitHub](https://img.shields.io/github/license/mdschweda/kubernetes-dashboard-auth.svg) ![Codacy branch grade](https://img.shields.io/codacy/grade/cdda7e5eb60145e5a9640b248a797e77/master.svg)
+
+An authentication proxy for the [Kubernetes dashboard](https://github.com/kubernetes/dashboard) that allows you to sign in with individual user accounts and 
 
 ![](https://raw.githubusercontent.com/wiki/mdschweda/kubernetes-dashboard-auth/assets/login.png)
 
