@@ -170,7 +170,7 @@ const providedValues = {
     }
 };
 
-/** The result of a configuration validation / sanitization. */
+/** The result of the configuration validation / sanitization. */
 export interface ConfigurationAudit {
     /** Critical configuration errors. */
     errors: string[],

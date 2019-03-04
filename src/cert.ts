@@ -1,5 +1,8 @@
 import { pki } from "node-forge";
 
+/**
+ * Generates a self signed certificate.
+ */
 export default function createSelfSignedCertificate() {
     let keyPair = pki.rsa.generateKeyPair(2048);
     let cert = pki.createCertificate();

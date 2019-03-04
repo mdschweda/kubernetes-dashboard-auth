@@ -10,6 +10,9 @@ class LdapClient {
 
     private readonly client: ldap.Client;
 
+    /**
+     * Creates a new instance of the class.
+     */
     constructor() {
         this.client = ldap.createClient({
             url: config.auth.ldap.server

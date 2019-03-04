@@ -8,7 +8,7 @@ import { pki } from "node-forge";
 /**
  * Validates and sanitizes the application configuration.
  * @param config The configuration object to validate.
- * @returns An array of configuration errors found during the validation process.
+ * @returns An object containing configuration errors and warnings found during the validation process.
  */
 export default async function validate(config: Configuration) : Promise<ConfigurationAudit> {
     let result = {

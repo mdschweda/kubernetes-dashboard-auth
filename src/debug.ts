@@ -1,6 +1,8 @@
 import { inspect } from "util";
 import config from "./config";
 
+// node /app/index.js -sc
+
 let args = process.argv.slice(2);
 if (args.includes("--show-config") || args.includes("-sc")) {
     console.log(inspect(config, {

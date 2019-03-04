@@ -17,10 +17,13 @@ export enum AuthenticationError {
     Other = "Other"
 }
 
+/**
+ * Represents an authentication attempt.
+ */
 export class Authentication {
 
     /**
-     * The error that occured during authentication.
+     * The error that occured during authentication or `undefined` if the authentication was successful.
      */
     readonly error: AuthenticationError | undefined;
 
@@ -35,8 +38,14 @@ export class Authentication {
      */
     readonly groups: string[];
 
-    private constructor(result: AuthenticationError | undefined, username: string | undefined, groups: string[] | undefined) {
-        this.error = result;
+    /**
+     * Creates a new instance of the class.
+     * @param error The error that occured during authentication or `undefined` if the authentication was successful.
+     * @param username The name of the authenticated user or `undefined` if the authentication was unsuccessful.
+     * @param groups he groups the user is a member of.
+     */
+    private constructor(error: AuthenticationError | undefined, username: string | undefined, groups: string[] | undefined) {
+        this.error = error;
         this.username = username;
         this.groups = groups || [];
     }
