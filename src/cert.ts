@@ -22,7 +22,8 @@ export default function createSelfSignedCertificate() {
     }];
     cert.setIssuer(attrs);
     cert.setSubject(attrs);
-
+    cert.serialNumber = new Date().valueOf().toString();
+    
     cert.setExtensions([
         {
             name: "basicConstraints",

@@ -2,9 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import status from "http-status-codes";
 import sendStatic from "../static";
 import config from "../config";
-import { AuthenticationProviderFactory } from "../authentication/provider";
-import { AuthenticationError } from "../authentication/authentication";
-import tokenCache from "../authentication/token-cache";
+import { AuthenticationProviderFactory } from "./provider";
+import { AuthenticationError } from "./authentication";
+import tokenCache from "./token-cache";
 
 /**
  * Logs out an authenticated user.
