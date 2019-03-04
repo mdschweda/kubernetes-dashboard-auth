@@ -8,7 +8,7 @@ An authentication proxy for the [Kubernetes dashboard](https://github.com/kubern
 
 ## TL;DR
 
-1. Deploy Kubernetes Dashboard: [Installation guide](https://github.com/kubernetes/dashboard/wiki/Installation).
+1. Deploy Kubernetes dashboard: [Installation guide](https://github.com/kubernetes/dashboard/wiki/Installation).
    - *Optional*: [Set up a certificate](https://github.com/kubernetes/dashboard/wiki/Installation#recommended-setup).
 2. [Configure](https://github.com/mdschweda/kubernetes-dashboard-auth/blob/master/deploy/config.yaml) authentication method.
    - *Optional*: Configure an [access control list](https://github.com/mdschweda/kubernetes-dashboard-auth/blob/master/deploy/acl.yaml) for access authorization.
