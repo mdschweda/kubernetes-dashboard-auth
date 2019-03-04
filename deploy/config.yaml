@@ -50,9 +50,7 @@ metadata:
   labels:
     app.kubernetes.io/name: kubernetes-dashboard-auth-secret
     app.kubernetes.io/part-of: dashboard
-stringData:
-  foo: bar
-
+# stringData:
   # When using authentication provider "ldap"...
   #------------------------------------------------------------------------------------------------
   # [REQUIRED] The password to use when connecting to the LDAP server.
