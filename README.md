@@ -2,6 +2,8 @@
 
 An authentication proxy for the [Kubernetes dashboard](https://github.com/kubernetes/dashboard) that allows you to sign in with individual user accounts.
 
+![](https://raw.githubusercontent.com/wiki/mdschweda/kubernetes-dashboard-auth/assets/login.png)
+
 ## TL;DR
 
 1. Deploy Kubernetes Dashboard: [Installation guide](https://github.com/kubernetes/dashboard/wiki/Installation).
