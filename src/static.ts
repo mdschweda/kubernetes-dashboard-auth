@@ -11,7 +11,7 @@ import status from "http-status-codes";
  * indicating if the requested path could be retrieved.
  */
 export default async function (res: Response, ...paths: string[]): Promise<boolean> {
-    paths = !paths || paths.length === 1 && (!paths[0] || paths[0] == "/") ?
+    paths = !paths || paths.length === 1 && (!paths[0] || paths[0] === "/") ?
         [__dirname, "static", "index.html"] : [__dirname, "static", ...paths];
 
     try {

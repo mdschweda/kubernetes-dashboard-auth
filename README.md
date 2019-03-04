@@ -14,7 +14,6 @@ An authentication proxy for the [Kubernetes dashboard](https://github.com/kubern
 
 For documentation, visit the [Wiki pages](https://github.com/mdschweda/kubernetes-dashboard-auth/wiki).
 
-
 ## License
 
 [MIT license](https://github.com/mdschweda/kubernetes-dashboard-auth/blob/master/LICENSE)

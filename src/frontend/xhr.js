@@ -29,7 +29,7 @@ export default function xhr(method, path, body = undefined) {
             resolve({
                 status: req.status,
                 content: req.response,
-                headers: headers
+                headers
             });
         });
         req.addEventListener("timeout", reject);
