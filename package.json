@@ -1,6 +1,6 @@
 {
   "name": "kubernetes-dashboard-auth",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An authentication proxy for the Kubernetes Dashboard",
   "scripts": {
     "build-frontend": "npx webpack",

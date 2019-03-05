@@ -1,7 +1,7 @@
 import url from "url";
 import { AuthenticationProviderFactory } from "./authentication/provider";
 import { Configuration, ConfigurationAudit } from "./config";
-import { encode as toBase64 } from "./base64";
+import { encode, decode } from "./base64";
 import createSelfSignedCertificate from "./cert";
 import { pki } from "node-forge";
 
@@ -39,13 +39,13 @@ export default async function validate(config: Configuration) : Promise<Configur
 
     if (!config.tls.cert || !config.tls.key) {
         let selfSignedCert = createSelfSignedCertificate();
-        config.tls.cert = toBase64(selfSignedCert.cert)!;
-        config.tls.key = toBase64(selfSignedCert.key)!;
+        config.tls.cert = encode(selfSignedCert.cert)!;
+        config.tls.key = encode(selfSignedCert.key)!;
         result.warnings.push("Generated a self signed certificate.");
     } else {
         try {
-            pki.certificateFromPem(config.tls.cert);
-            pki.privateKeyFromPem(config.tls.key);
+            pki.certificateFromPem(decode(config.tls.cert)!);
+            pki.privateKeyFromPem(decode(config.tls.key)!);
         } catch {
             result.errors.push("Invalid certificate and/or private key.")
         }
