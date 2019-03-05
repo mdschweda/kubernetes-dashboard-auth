@@ -45,7 +45,7 @@ export default class TokenCache {
                     if (resp.status === status.OK) {
                         let token = decode((resp.data as TokenSecret).data.token);
                         if (token) {
-                            this._cache.set(sa.fqn, decode(token)!);
+                            this._cache.set(sa.fqn, token);
                             return token;
                         }
                     }
