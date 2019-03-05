@@ -43,7 +43,7 @@ export default class TokenCache {
                 if (secret) {
                     resp = await axios.get(this.apiEndpoint(`/namespaces/${sa.namespace}/secrets/${secret}`), this.bearerAuth);
                     if (resp.status === status.OK) {
-                        let token = (resp.data as TokenSecret).data.token;
+                        let token = decode((resp.data as TokenSecret).data.token);
                         if (token) {
                             this._cache.set(sa.fqn, decode(token)!);
                             return token;

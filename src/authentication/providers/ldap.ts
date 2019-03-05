@@ -85,10 +85,16 @@ export default class LDAPValidationProvider implements IAuthenticationProvider  
 
     /** @inheritdoc */
     validateConfiguration(): ConfigurationAudit {
-        return {
+        let result: ConfigurationAudit = {
             errors: [],
             warnings: []
         };
+
+        !config.auth.ldap.server && result.errors.push("No ldap server address specified.");
+        !config.auth.ldap.bindUser && result.errors.push("No ldap bind user specified.");
+        !config.auth.ldap.bindPassword && result.errors.push("No ldap bind password specified.");
+        
+        return result;
     }
 
     /** @inheritdoc */
